@@ -90,3 +90,33 @@ inmobiliaria/
 ├── video/               # Proyecto Remotion (video)
 └── .env.example         # Plantilla de variables de entorno
 ```
+
+## Integracion con Supabase (opcional)
+
+Por defecto ListaPro guarda todo localmente. Si quieres tener un **historial de listados** y almacenamiento en la nube, puedes conectarlo a Supabase.
+
+### 1. Crea una cuenta en Supabase
+
+Ve a [supabase.com](https://supabase.com/) y crea un proyecto nuevo. Anota la **URL** del proyecto y las **API keys** (anon key y service role key) que aparecen en Settings > API.
+
+### 2. Pidele a Claude que lo configure
+
+Abre Claude Code dentro del proyecto y dile:
+
+```
+Configura Supabase para ListaPro. Mi URL es [tu-url] y mis keys son [tus-keys]
+```
+
+Claude va a:
+- Actualizar tu archivo `.env` con las credenciales de Supabase
+- Cambiar `STORAGE_MODE` de `local` a `supabase`
+- Crear las tablas necesarias en tu base de datos
+- Crear los buckets de almacenamiento para fotos y videos
+
+### 3. Reinicia el servidor
+
+```
+Reinicia el servidor de ListaPro
+```
+
+Ahora tendras acceso al **Historial** donde puedes ver y descargar todos los listados que hayas generado.
