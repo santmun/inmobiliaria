@@ -1,0 +1,34 @@
+# Environment & secrets
+.env
+.env.local
+.env.production
+
+# Generated files
+generated/
+*.pdf
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# Node (Remotion video)
+video/node_modules/
+video/out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Supabase local
+supabase/.temp/
+
+# Claude
+CLAUDE.md

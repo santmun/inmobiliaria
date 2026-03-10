@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ListaPro - Listado Generado</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=6">
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-logo">
+                <h1>Lista<span>Pro</span></h1>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="header-nav-link">+ Nuevo Listado</a>
+                <a href="/plantilla" class="header-nav-link">Plantilla</a>
+                <a href="/historial" class="header-nav-link">Historial</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="margin-top: 2rem;">
+        <div class="results-header">
+            <div class="success-check">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h2>Tu Listado Está Listo</h2>
+            <p>{{ tipo_propiedad }} en {{ operacion | lower }} — {{ ciudad }}, {{ pais_nombre }}</p>
+        </div>
+
+        {% if error %}
+        <div class="error-box">{{ error }}</div>
+        {% endif %}
+
+        <!-- PDF DOWNLOAD -->
+        {% if pdf_filename %}
+        <div class="result-card" style="text-align: center;">
+            <h3>
+                <span>📄 Ficha PDF Profesional</span>
+            </h3>
+            <p style="margin-bottom: 1rem; color: var(--text-light);">
+                Tu ficha inmobiliaria está lista para descargar e imprimir.
+            </p>
+            <a href="/descargar/{{ pdf_filename }}" class="btn-download" download>
+                📥 Descargar PDF
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- VIDEO REEL -->
+        {% if job_id %}
+        <div class="result-card" id="videoCard" style="text-align: center;">
+            <h3>
+                <span>🎬 Video Reel (Instagram / TikTok)</span>
+            </h3>
+            <div id="videoStatus">
+                <div class="video-rendering">
+                    <div class="video-spinner"></div>
+                    <p class="video-spinner-text">
+                        Generando música de fondo con IA...
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- INSTAGRAM / FACEBOOK -->
+        <div class="result-card">
+            <h3>
+                <span>📱 Copy para Instagram / Facebook</span>
+                <button class="btn-copy" onclick="copyText('instaCopy', this)">Copiar</button>
+            </h3>
+            <div class="content-box" id="instaCopy">{{ copy_instagram }}</div>
+        </div>
+
+        <!-- WHATSAPP -->
+        <div class="result-card">
+            <h3>
+                <span>💬 Mensaje para WhatsApp</span>
+                <button class="btn-copy" onclick="copyText('whatsappCopy', this)">Copiar</button>
+            </h3>
+            <div class="content-box" id="whatsappCopy">{{ mensaje_whatsapp }}</div>
+            <div style="margin-top: 1rem;">
+                <a href="https://wa.me/?text={{ mensaje_whatsapp_encoded }}" target="_blank" class="btn-whatsapp">
+                    📲 Enviar por WhatsApp
+                </a>
+            </div>
+        </div>
+
+        <!-- DESCRIPCIÓN PDF -->
+        <div class="result-card">
+            <h3>
+                <span>📝 Descripción del PDF</span>
+                <button class="btn-copy" onclick="copyText('pdfCopy', this)">Copiar</button>
+            </h3>
+            <div class="content-box" id="pdfCopy">{{ descripcion_pdf }}</div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="results-actions">
+            <a href="/" class="btn-new">+ Generar Otro Listado</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <span>ListaPro</span> — Automatización inteligente para inmobiliarias
+    </footer>
+
+    <script>
+        function copyText(elementId, btn) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const original = btn.textContent;
+                btn.textContent = 'Copiado';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = original;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Video polling
+        {% if job_id %}
+        (function() {
+            const jobId = "{{ job_id }}";
+            const statusDiv = document.getElementById("videoStatus");
+            let pollCount = 0;
+            const maxPolls = 100;
+
+            const statusMessages = {
+                generating_music: "Generando música de fondo con IA...",
+                rendering: "Renderizando video reel...",
+            };
+
+            function pollVideoStatus() {
+                pollCount++;
+                if (pollCount > maxPolls) {
+                    statusDiv.innerHTML = '<div class="video-failed">El video tardó demasiado. Intenta generar otro listado.</div>';
+                    return;
+                }
+
+                fetch("/video/status/" + jobId)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.status === "ready") {
+                            statusDiv.innerHTML = `
+                                <p style="margin-bottom: 1rem; color: var(--text-light);">
+                                    Tu video reel vertical (9:16) está listo.
+                                </p>
+                                <a href="/descargar/${data.filename}" class="btn-video-download" download>
+                                    🎬 Descargar Video Reel
+                                </a>
+                            `;
+                        } else if (data.status === "failed") {
+                            statusDiv.innerHTML = '<div class="video-failed">No se pudo generar el video: ' + (data.error || 'Error desconocido') + '</div>';
+                        } else {
+                            const msg = statusMessages[data.status] || "Procesando video...";
+                            const spinner = statusDiv.querySelector('.video-spinner-text');
+                            if (spinner) spinner.textContent = msg;
+                            setTimeout(pollVideoStatus, 3000);
+                        }
+                    })
+                    .catch(() => {
+                        setTimeout(pollVideoStatus, 5000);
+                    });
+            }
+
+            setTimeout(pollVideoStatus, 2000);
+        })();
+        {% endif %}
+    </script>
+</body>
+</html>

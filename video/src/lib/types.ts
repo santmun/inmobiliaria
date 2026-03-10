@@ -1,0 +1,20 @@
+export type ListingProps = {
+  tipoPropiedad: string;
+  operacion: string;
+  ciudad: string;
+  paisNombre: string;
+  precioFormateado: string;
+  recamaras: string;
+  banos: string;
+  m2Construidos: string;
+  estacionamientos: string;
+  fotoPortada: string;
+  fotosExtra: string[];
+  agenteNombre: string;
+  agenteTelefono: string;
+  agenciaNombre: string;
+  musicUrl?: string;
+  colorBackground?: string;
+  colorAccent?: string;
+  colorCta?: string;
+};

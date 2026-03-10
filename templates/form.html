@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ListaPro - Genera Listados Inmobiliarios Profesionales</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=6">
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-logo">
+                <h1>Lista<span>Pro</span></h1>
+            </div>
+            <nav class="header-nav">
+                <a href="/plantilla" class="header-nav-link">Plantilla</a>
+                <a href="/historial" class="header-nav-link">Historial</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+        <div class="hero-content">
+            <h2>Genera Listados Inmobiliarios Profesionales</h2>
+            <p>PDF listo para imprimir, Video Reel con música IA, copy para Instagram y mensaje de WhatsApp — todo generado automáticamente.</p>
+            <div class="gold-line"></div>
+        </div>
+    </div>
+
+    <main class="container">
+        {% if error %}
+        <div class="error-box">{{ error }}</div>
+        {% endif %}
+
+        <form action="/generar" method="post" enctype="multipart/form-data" id="listingForm">
+
+            <!-- Wizard Progress Bar -->
+            <div class="wizard-progress">
+                <div class="wizard-steps-nav">
+                    <div class="wizard-progress-line" id="wizardProgressLine"></div>
+                    <div class="wizard-step-indicator active" data-step="1">
+                        <div class="wizard-step-circle">1</div>
+                        <span class="wizard-step-label">Propiedad</span>
+                    </div>
+                    <div class="wizard-step-indicator" data-step="2">
+                        <div class="wizard-step-circle">2</div>
+                        <span class="wizard-step-label">Detalles</span>
+                    </div>
+                    <div class="wizard-step-indicator" data-step="3">
+                        <div class="wizard-step-circle">3</div>
+                        <span class="wizard-step-label">Amenidades</span>
+                    </div>
+                    <div class="wizard-step-indicator" data-step="4">
+                        <div class="wizard-step-circle">4</div>
+                        <span class="wizard-step-label">Fotos</span>
+                    </div>
+                    <div class="wizard-step-indicator" data-step="5">
+                        <div class="wizard-step-circle">5</div>
+                        <span class="wizard-step-label">Agente</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 1: PROPIEDAD + UBICACIÓN -->
+            <div class="wizard-step active" data-wizard-step="1">
+                <div class="form-section">
+                    <h2>
+                        <span class="section-icon gold">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+                        </span>
+                        Datos de la Propiedad
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Tipo de propiedad <span class="required">*</span></label>
+                            <select name="tipo_propiedad" required>
+                                <option value="">Seleccionar...</option>
+                                {% for tipo in property_types %}
+                                <option value="{{ tipo }}">{{ tipo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Operación <span class="required">*</span></label>
+                            <select name="operacion" required>
+                                {% for op in operations %}
+                                <option value="{{ op }}">{{ op }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>País <span class="required">*</span></label>
+                            <select name="pais" id="countrySelect" required>
+                                {% for key, country in countries.items() %}
+                                <option value="{{ key }}" data-symbol="{{ country.symbol }}" data-currency="{{ country.currency }}">
+                                    {{ country.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ciudad / Zona <span class="required">*</span></label>
+                            <input type="text" name="ciudad" placeholder="Ej: Polanco, CDMX" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Dirección</label>
+                            <input type="text" name="direccion" placeholder="Calle, número, colonia (opcional para el listado público)">
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-nav end-only">
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente →</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: PRECIO + CARACTERÍSTICAS -->
+            <div class="wizard-step" data-wizard-step="2">
+                <div class="form-section">
+                    <h2>
+                        <span class="section-icon gold">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        </span>
+                        Precio y Características
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Precio <span class="required">*</span></label>
+                            <div class="price-input-wrapper">
+                                <span class="currency-badge" id="currencyBadge">$ MXN</span>
+                                <input type="number" name="precio" placeholder="Ej: 8500000" required min="0" step="1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Recámaras</label>
+                            <input type="number" name="recamaras" placeholder="0" min="0" max="20">
+                        </div>
+                        <div class="form-group">
+                            <label>Baños</label>
+                            <input type="number" name="banos" placeholder="0" min="0" max="20" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Superficie construida (m²) <span class="required">*</span></label>
+                            <input type="number" name="m2_construidos" placeholder="Ej: 180" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Superficie terreno (m²)</label>
+                            <input type="number" name="m2_terreno" placeholder="Ej: 250" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Estacionamientos</label>
+                            <input type="number" name="estacionamientos" placeholder="0" min="0" max="20">
+                        </div>
+                        <div class="form-group">
+                            <label>Pisos / Niveles</label>
+                            <input type="number" name="pisos" placeholder="1" min="1" max="100">
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">← Anterior</button>
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente →</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: AMENIDADES + NOTAS -->
+            <div class="wizard-step" data-wizard-step="3">
+                <div class="form-section">
+                    <h2>
+                        <span class="section-icon gold">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </span>
+                        Amenidades
+                    </h2>
+                    <div class="amenities-grid">
+                        {% for amenity in amenities %}
+                        <label class="amenity-item">
+                            <input type="checkbox" name="amenidades" value="{{ amenity }}">
+                            <span class="amenity-check"></span>
+                            {{ amenity }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group full-width" style="margin-top: 1rem;">
+                        <label>Otras amenidades</label>
+                        <input type="text" name="otras_amenidades" placeholder="Separadas por coma: Ej: Jacuzzi, Cava de vinos, Home office">
+                    </div>
+                    <div class="form-group full-width" style="margin-top: 1rem;">
+                        <label>Notas adicionales</label>
+                        <textarea name="notas" placeholder="Ej: Recién remodelada, cerca de escuelas y centros comerciales, excelente vista panorámica, ideal para familias..."></textarea>
+                    </div>
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">← Anterior</button>
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente →</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: FOTOS -->
+            <div class="wizard-step" data-wizard-step="4">
+                <div class="form-section">
+                    <h2>
+                        <span class="section-icon gold">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+                        </span>
+                        Fotos de la Propiedad
+                    </h2>
+                    <div class="photo-sections">
+                        <!-- Cover Photo -->
+                        <div class="photo-section-cover">
+                            <div class="cover-badge">PORTADA</div>
+                            <p class="photo-section-subtitle">Imagen principal del PDF y video</p>
+                            <div class="photo-upload-area" id="coverUploadArea">
+                                <input type="file" name="foto_portada" id="coverFileInput" accept="image/*">
+                                <div class="photo-upload-icon">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                </div>
+                                <p class="photo-upload-text">
+                                    <strong>Foto de portada</strong><br>
+                                    Haz clic para seleccionar
+                                </p>
+                            </div>
+                            <div class="cover-preview" id="coverPreview"></div>
+                        </div>
+
+                        <!-- Extra Photos -->
+                        <div class="photo-section-extras">
+                            <p class="photo-section-subtitle">Fotos adicionales para la galería (máx. 9)</p>
+                            <div class="photo-upload-area" id="extrasUploadArea">
+                                <input type="file" name="fotos_extra" id="extrasFileInput" multiple accept="image/*">
+                                <div class="photo-upload-icon">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                </div>
+                                <p class="photo-upload-text">
+                                    <strong>Fotos extras</strong><br>
+                                    Haz clic o arrastra
+                                </p>
+                            </div>
+                            <div class="photo-previews" id="extrasPreviews"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">← Anterior</button>
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente →</button>
+                </div>
+            </div>
+
+            <!-- STEP 5: AGENTE + SUBMIT -->
+            <div class="wizard-step" data-wizard-step="5">
+                <div class="form-section">
+                    <h2>
+                        <span class="section-icon gold">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </span>
+                        Contacto del Agente
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre del agente <span class="required">*</span></label>
+                            <input type="text" name="agente_nombre" placeholder="Ej: María García" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono <span class="required">*</span></label>
+                            <input type="tel" name="agente_telefono" placeholder="Ej: +52 55 1234 5678" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="agente_email" placeholder="Ej: maria@inmobiliaria.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre de la agencia</label>
+                            <input type="text" name="agencia_nombre" placeholder="Ej: Inmobiliaria Premium">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wizard-nav">
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">← Anterior</button>
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                        Generar Listado Profesional
+                    </button>
+                </div>
+                <p class="submit-hint" style="text-align: center;">La generación toma aproximadamente 10-15 segundos</p>
+            </div>
+        </form>
+    </main>
+
+    <footer class="footer">
+        <span>ListaPro</span> — Automatización inteligente para inmobiliarias
+    </footer>
+
+    <script>
+        // ============================================
+        // WIZARD CONTROLLER
+        // ============================================
+        let currentStep = 1;
+        const totalSteps = 5;
+
+        function showStep(step) {
+            document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+            const target = document.querySelector(`.wizard-step[data-wizard-step="${step}"]`);
+            if (target) target.classList.add('active');
+
+            document.querySelectorAll('.wizard-step-indicator').forEach(ind => {
+                const indStep = parseInt(ind.dataset.step);
+                ind.classList.remove('active', 'completed');
+                if (indStep === step) ind.classList.add('active');
+                else if (indStep < step) ind.classList.add('completed');
+            });
+
+            // Update progress line width
+            const line = document.getElementById('wizardProgressLine');
+            const pct = ((step - 1) / (totalSteps - 1)) * 100;
+            line.style.width = `calc(${pct}% - ${pct > 0 ? 0 : 20}px)`;
+
+            document.querySelector('.wizard-progress').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            currentStep = step;
+        }
+
+        function validateStep(step) {
+            const stepEl = document.querySelector(`.wizard-step[data-wizard-step="${step}"]`);
+            const requiredFields = stepEl.querySelectorAll('[required]');
+            let valid = true;
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('input-error');
+                    valid = false;
+                } else {
+                    field.classList.remove('input-error');
+                }
+            });
+            if (!valid) {
+                const hint = stepEl.querySelector('.validation-hint');
+                if (hint) hint.classList.add('show');
+            }
+            return valid;
+        }
+
+        function wizardNext() {
+            if (!validateStep(currentStep)) return;
+            if (currentStep < totalSteps) {
+                showStep(currentStep + 1);
+            }
+        }
+
+        function wizardBack() {
+            if (currentStep > 1) {
+                showStep(currentStep - 1);
+            }
+        }
+
+        // Remove error styling on input
+        document.querySelectorAll('input, select, textarea').forEach(field => {
+            field.addEventListener('input', () => field.classList.remove('input-error'));
+        });
+
+        // ============================================
+        // CURRENCY BADGE UPDATE
+        // ============================================
+        const countrySelect = document.getElementById('countrySelect');
+        const currencyBadge = document.getElementById('currencyBadge');
+        countrySelect.addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            currencyBadge.textContent = `${selected.dataset.symbol} ${selected.dataset.currency}`;
+        });
+
+        // ============================================
+        // COVER PHOTO (single file)
+        // ============================================
+        const coverInput = document.getElementById('coverFileInput');
+        const coverPreview = document.getElementById('coverPreview');
+        const coverUploadArea = document.getElementById('coverUploadArea');
+
+        coverInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                showCoverPreview(this.files[0]);
+            }
+        });
+
+        function showCoverPreview(file) {
+            if (!file.type.startsWith('image/')) return;
+            coverPreview.innerHTML = '';
+            const div = document.createElement('div');
+            div.className = 'photo-preview cover-photo-preview';
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.onload = () => URL.revokeObjectURL(img.src);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-btn';
+            removeBtn.textContent = '\u2715';
+            removeBtn.onclick = () => {
+                coverPreview.innerHTML = '';
+                coverInput.value = '';
+                coverUploadArea.style.display = '';
+            };
+            div.appendChild(img);
+            div.appendChild(removeBtn);
+            coverPreview.appendChild(div);
+            coverUploadArea.style.display = 'none';
+        }
+
+        // ============================================
+        // EXTRA PHOTOS (multiple files)
+        // ============================================
+        const extrasInput = document.getElementById('extrasFileInput');
+        const extrasPreviews = document.getElementById('extrasPreviews');
+        const extrasUploadArea = document.getElementById('extrasUploadArea');
+        let extrasFiles = new DataTransfer();
+
+        extrasInput.addEventListener('change', function() {
+            addExtras(this.files);
+        });
+
+        extrasUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            extrasUploadArea.classList.add('dragover');
+        });
+        extrasUploadArea.addEventListener('dragleave', () => {
+            extrasUploadArea.classList.remove('dragover');
+        });
+        extrasUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            extrasUploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) addExtras(e.dataTransfer.files);
+        });
+
+        function addExtras(files) {
+            const maxFiles = 9;
+            for (let file of files) {
+                if (extrasFiles.files.length >= maxFiles) break;
+                if (!file.type.startsWith('image/')) continue;
+                extrasFiles.items.add(file);
+            }
+            extrasInput.files = extrasFiles.files;
+            renderExtras();
+        }
+
+        function renderExtras() {
+            extrasPreviews.innerHTML = '';
+            for (let i = 0; i < extrasFiles.files.length; i++) {
+                const file = extrasFiles.files[i];
+                const div = document.createElement('div');
+                div.className = 'photo-preview';
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.onload = () => URL.revokeObjectURL(img.src);
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = '\u2715';
+                removeBtn.onclick = () => removeExtra(i);
+                div.appendChild(img);
+                div.appendChild(removeBtn);
+                extrasPreviews.appendChild(div);
+            }
+        }
+
+        function removeExtra(index) {
+            const newDT = new DataTransfer();
+            for (let i = 0; i < extrasFiles.files.length; i++) {
+                if (i !== index) newDT.items.add(extrasFiles.files[i]);
+            }
+            extrasFiles = newDT;
+            extrasInput.files = extrasFiles.files;
+            renderExtras();
+        }
+
+        // ============================================
+        // FORM SUBMIT LOADING STATE
+        // ============================================
+        const form = document.getElementById('listingForm');
+        const submitBtn = document.getElementById('submitBtn');
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Generando listado...';
+        });
+    </script>
+</body>
+</html>

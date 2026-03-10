@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ListaPro - Editor de Plantilla</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=6">
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-logo">
+                <h1>Lista<span>Pro</span></h1>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="header-nav-link">Nuevo Listado</a>
+                <a href="/plantilla" class="header-nav-link active">Plantilla</a>
+                <a href="/historial" class="header-nav-link">Historial</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="margin-top: 2rem; max-width: 900px;">
+        <div class="template-editor-header">
+            <h2>Editor de Plantilla</h2>
+            <p>Personaliza los colores y estilo de tus listados generados.</p>
+        </div>
+
+        {% if saved %}
+        <div class="toast-success" id="toast">Plantilla guardada correctamente</div>
+        {% endif %}
+        {% if reset %}
+        <div class="toast-success" id="toast">Valores restaurados a los predeterminados</div>
+        {% endif %}
+
+        <form method="POST" action="/plantilla/guardar" class="template-form" enctype="multipart/form-data">
+            <!-- BRANDING SECTION -->
+            <div class="template-section">
+                <h3 class="template-section-title">
+                    <span class="template-section-icon">🏢</span>
+                    Identidad de Marca
+                </h3>
+                <div class="template-section-body">
+                    <div class="file-uploads-row">
+                        <div class="file-upload-group">
+                            <label>Logo de la Agencia</label>
+                            <div class="file-upload-area" id="logoUploadArea" onclick="document.getElementById('logoInput').click()">
+                                {% if logo_url %}
+                                <img src="{{ logo_url }}" class="file-preview" id="logoPreview">
+                                {% else %}
+                                <div class="file-upload-placeholder" id="logoPlaceholder">
+                                    <span class="file-upload-icon">🖼️</span>
+                                    <span>Click para subir logo</span>
+                                </div>
+                                <img src="" class="file-preview" id="logoPreview" style="display:none">
+                                {% endif %}
+                            </div>
+                            <input type="file" id="logoInput" name="logo" accept="image/*" style="display:none"
+                                   onchange="previewFile(this, 'logoPreview', 'logoPlaceholder')">
+                            <span class="color-hint">Aparece en el encabezado del PDF</span>
+                        </div>
+                        <div class="file-upload-group">
+                            <label>Foto del Agente</label>
+                            <div class="file-upload-area" id="photoUploadArea" onclick="document.getElementById('photoInput').click()">
+                                {% if agent_photo_url %}
+                                <img src="{{ agent_photo_url }}" class="file-preview file-preview-round" id="photoPreview">
+                                {% else %}
+                                <div class="file-upload-placeholder" id="photoPlaceholder">
+                                    <span class="file-upload-icon">👤</span>
+                                    <span>Click para subir foto</span>
+                                </div>
+                                <img src="" class="file-preview file-preview-round" id="photoPreview" style="display:none">
+                                {% endif %}
+                            </div>
+                            <input type="file" id="photoInput" name="agent_photo" accept="image/*" style="display:none"
+                                   onchange="previewFile(this, 'photoPreview', 'photoPlaceholder')">
+                            <span class="color-hint">Aparece junto a tu información de contacto en el PDF</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF SECTION -->
+            <div class="template-section">
+                <h3 class="template-section-title">
+                    <span class="template-section-icon">📄</span>
+                    Plantilla del PDF
+                </h3>
+                <div class="template-section-body">
+                    <!-- Variant selector -->
+                    <label class="variant-label">Formato de diseño</label>
+                    <input type="hidden" name="pdf_template" id="pdf_template" value="{{ settings.pdf.pdf_template }}">
+                    <div class="variant-selector">
+                        <div class="variant-option {% if settings.pdf.pdf_template == 'clasico' %}selected{% endif %}" data-value="clasico" onclick="selectVariant(this, 'clasico')">
+                            <div class="variant-thumb variant-thumb-clasico">
+                                <div class="vt-hero">
+                                    <div class="vt-badge"></div>
+                                    <div class="vt-price-overlay"></div>
+                                </div>
+                                <div class="vt-statsbar"></div>
+                                <div class="vt-lines">
+                                    <div class="vt-line"></div>
+                                    <div class="vt-line short"></div>
+                                </div>
+                            </div>
+                            <span class="variant-name">Clásico</span>
+                            <span class="variant-desc">Foto hero inmersiva con overlay</span>
+                        </div>
+                        <div class="variant-option {% if settings.pdf.pdf_template == 'moderno' %}selected{% endif %}" data-value="moderno" onclick="selectVariant(this, 'moderno')">
+                            <div class="variant-thumb variant-thumb-moderno">
+                                <div class="vt-header-bar"></div>
+                                <div class="vt-photo"></div>
+                                <div class="vt-center-price"></div>
+                                <div class="vt-cards">
+                                    <div class="vt-card"></div>
+                                    <div class="vt-card"></div>
+                                    <div class="vt-card"></div>
+                                </div>
+                            </div>
+                            <span class="variant-name">Moderno</span>
+                            <span class="variant-desc">Layout tipo revista con espacio</span>
+                        </div>
+                    </div>
+
+                    <label class="variant-label" style="margin-top: 1.5rem;">Colores</label>
+                    <div class="color-pickers-row">
+                        <div class="color-picker-group">
+                            <label for="pdf_color_primary">Color Primario</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="pdf_color_primary" name="pdf_color_primary"
+                                       value="{{ settings.pdf.color_primary }}">
+                                <input type="text" class="color-hex-input" id="pdf_color_primary_hex"
+                                       value="{{ settings.pdf.color_primary }}" maxlength="7">
+                            </div>
+                            <span class="color-hint">Títulos, encabezados, barra de stats</span>
+                        </div>
+                        <div class="color-picker-group">
+                            <label for="pdf_color_accent">Color Acento</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="pdf_color_accent" name="pdf_color_accent"
+                                       value="{{ settings.pdf.color_accent }}">
+                                <input type="text" class="color-hex-input" id="pdf_color_accent_hex"
+                                       value="{{ settings.pdf.color_accent }}" maxlength="7">
+                            </div>
+                            <span class="color-hint">Badge de operación (Venta/Renta)</span>
+                        </div>
+                    </div>
+                    <!-- PDF Preview -->
+                    <div class="preview-label">Vista previa</div>
+                    <div class="preview-pdf" id="previewPdf">
+                        <div class="preview-pdf-hero">
+                            <div class="preview-pdf-badge" id="prevPdfBadge">VENTA</div>
+                            <div class="preview-pdf-price">$5,500,000</div>
+                            <div class="preview-pdf-location">CDMX, México</div>
+                        </div>
+                        <div class="preview-pdf-stats" id="prevPdfStats">
+                            <span>3 Rec</span>
+                            <span>2 Baños</span>
+                            <span>220 m²</span>
+                        </div>
+                        <div class="preview-pdf-title" id="prevPdfTitle">Descripción</div>
+                        <div class="preview-pdf-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIDEO SECTION -->
+            <div class="template-section">
+                <h3 class="template-section-title">
+                    <span class="template-section-icon">🎬</span>
+                    Colores del Video
+                </h3>
+                <div class="template-section-body">
+                    <div class="color-pickers-row">
+                        <div class="color-picker-group">
+                            <label for="video_color_background">Fondo</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="video_color_background" name="video_color_background"
+                                       value="{{ settings.video.color_background }}">
+                                <input type="text" class="color-hex-input" id="video_color_background_hex"
+                                       value="{{ settings.video.color_background }}" maxlength="7">
+                            </div>
+                            <span class="color-hint">Fondo de escenas del video</span>
+                        </div>
+                        <div class="color-picker-group">
+                            <label for="video_color_accent">Acento</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="video_color_accent" name="video_color_accent"
+                                       value="{{ settings.video.color_accent }}">
+                                <input type="text" class="color-hex-input" id="video_color_accent_hex"
+                                       value="{{ settings.video.color_accent }}" maxlength="7">
+                            </div>
+                            <span class="color-hint">Líneas decorativas, precio, títulos</span>
+                        </div>
+                        <div class="color-picker-group">
+                            <label for="video_color_cta">Botón CTA</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="video_color_cta" name="video_color_cta"
+                                       value="{{ settings.video.color_cta }}">
+                                <input type="text" class="color-hex-input" id="video_color_cta_hex"
+                                       value="{{ settings.video.color_cta }}" maxlength="7">
+                            </div>
+                            <span class="color-hint">Badge, botón de contacto</span>
+                        </div>
+                    </div>
+                    <!-- Video Preview -->
+                    <div class="preview-label">Vista previa</div>
+                    <div class="preview-phone-wrapper">
+                        <div class="preview-phone" id="previewVideo">
+                            <div class="preview-phone-badge" id="prevVideoBadge">VENTA</div>
+                            <div class="preview-phone-line" id="prevVideoLine"></div>
+                            <div class="preview-phone-type" id="prevVideoType">CASA</div>
+                            <div class="preview-phone-price" id="prevVideoPrice">$5,500,000</div>
+                            <div class="preview-phone-cta" id="prevVideoCta">📞 Contactar</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MUSIC SECTION -->
+            <div class="template-section">
+                <h3 class="template-section-title">
+                    <span class="template-section-icon">🎵</span>
+                    Estilo de Música
+                </h3>
+                <div class="template-section-body">
+                    <div class="music-field">
+                        <label for="music_style">Estilo / Tags</label>
+                        <input type="text" id="music_style" name="music_style"
+                               value="{{ settings.music.style }}"
+                               placeholder="elegant piano ambient cinematic...">
+                        <span class="color-hint">Describe el estilo de música de fondo para el video reel</span>
+                    </div>
+                    <div class="music-presets">
+                        <span class="presets-label">Presets:</span>
+                        <button type="button" class="btn-preset" onclick="setMusicPreset('elegant ambient piano cinematic soft luxury real estate')">Elegante Piano</button>
+                        <button type="button" class="btn-preset" onclick="setMusicPreset('upbeat corporate motivational inspiring positive')">Upbeat Corporate</button>
+                        <button type="button" class="btn-preset" onclick="setMusicPreset('cinematic orchestra dramatic epic emotional')">Cinematic Orchestra</button>
+                        <button type="button" class="btn-preset" onclick="setMusicPreset('chill lofi hip hop relaxing calm background')">Chill Lofi</button>
+                    </div>
+                    <div class="music-field" style="margin-top: 1rem;">
+                        <label for="music_negative_tags">Tags Negativos</label>
+                        <input type="text" id="music_negative_tags" name="music_negative_tags"
+                               value="{{ settings.music.negative_tags }}"
+                               placeholder="vocals, singing, heavy metal...">
+                        <span class="color-hint">Estilos a evitar en la generación de música</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR SECTION -->
+            <div class="template-section">
+                <h3 class="template-section-title">
+                    <span class="template-section-icon">📱</span>
+                    Código QR
+                </h3>
+                <div class="template-section-body">
+                    <div class="qr-toggle-row">
+                        <label class="qr-toggle-label">
+                            <input type="checkbox" id="qr_enabled" name="qr_enabled"
+                                   {% if settings.branding.qr_enabled %}checked{% endif %}
+                                   onchange="toggleQrUrl()">
+                            <span>Incluir código QR en el PDF</span>
+                        </label>
+                    </div>
+                    <div class="qr-url-field">
+                        <label for="qr_url">URL de destino</label>
+                        <input type="url" id="qr_url" name="qr_url"
+                               value="{{ settings.branding.qr_url }}"
+                               placeholder="https://tu-sitio.com/propiedad"
+                               {% if not settings.branding.qr_enabled %}disabled{% endif %}>
+                        <span class="color-hint">El QR aparecerá en la esquina inferior derecha del PDF. Puede ser tu sitio web, link de WhatsApp, etc.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="template-actions">
+                <button type="submit" class="btn-template-save">Guardar Plantilla</button>
+                <a href="/plantilla/reset" class="btn-template-reset">Restaurar Predeterminados</a>
+            </div>
+        </form>
+    </main>
+
+    <footer class="footer">
+        <span>ListaPro</span> — Automatización inteligente para inmobiliarias
+    </footer>
+
+    <script>
+        // Sync color picker ↔ hex input
+        document.querySelectorAll('input[type="color"]').forEach(picker => {
+            const hexInput = document.getElementById(picker.id + '_hex');
+            if (!hexInput) return;
+            picker.addEventListener('input', () => {
+                hexInput.value = picker.value;
+                updatePreviews();
+            });
+            hexInput.addEventListener('input', () => {
+                if (/^#[0-9a-fA-F]{6}$/.test(hexInput.value)) {
+                    picker.value = hexInput.value;
+                    updatePreviews();
+                }
+            });
+        });
+
+        function selectVariant(el, value) {
+            document.querySelectorAll('.variant-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('pdf_template').value = value;
+        }
+
+        function setMusicPreset(value) {
+            document.getElementById('music_style').value = value;
+        }
+
+        function previewFile(input, previewId, placeholderId) {
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(placeholderId);
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function toggleQrUrl() {
+            const cb = document.getElementById('qr_enabled');
+            const urlInput = document.getElementById('qr_url');
+            urlInput.disabled = !cb.checked;
+            if (!cb.checked) urlInput.value = '';
+        }
+
+        function updatePreviews() {
+            // PDF Preview
+            const pdfPrimary = document.getElementById('pdf_color_primary').value;
+            const pdfAccent = document.getElementById('pdf_color_accent').value;
+            document.getElementById('prevPdfBadge').style.backgroundColor = pdfAccent;
+            document.getElementById('prevPdfStats').style.backgroundColor = pdfPrimary;
+            document.getElementById('prevPdfTitle').style.color = pdfPrimary;
+
+            // Video Preview
+            const vidBg = document.getElementById('video_color_background').value;
+            const vidAccent = document.getElementById('video_color_accent').value;
+            const vidCta = document.getElementById('video_color_cta').value;
+            document.getElementById('previewVideo').style.backgroundColor = vidBg;
+            document.getElementById('prevVideoBadge').style.backgroundColor = vidCta;
+            document.getElementById('prevVideoLine').style.backgroundColor = vidAccent;
+            document.getElementById('prevVideoType').style.color = vidAccent;
+            document.getElementById('prevVideoPrice').style.color = vidAccent;
+            document.getElementById('prevVideoCta').style.backgroundColor = vidCta;
+        }
+
+        // Initial preview state
+        updatePreviews();
+
+        // Auto-dismiss toast
+        const toast = document.getElementById('toast');
+        if (toast) {
+            setTimeout(() => toast.classList.add('fade-out'), 3000);
+            setTimeout(() => toast.remove(), 3500);
+        }
+    </script>
+</body>
+</html>
