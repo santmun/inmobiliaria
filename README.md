@@ -61,8 +61,8 @@ Abre tu Terminal (Mac) o PowerShell (Windows) y escribe estos comandos uno por u
 
 ```bash
 cd ~/Documents
-git clone https://github.com/santmun/listapro.git
-cd listapro
+git clone https://github.com/santmun/inmobiliaria.git
+cd inmobiliaria
 ```
 
 > Esto descarga el proyecto en tu carpeta de Documentos.
@@ -198,14 +198,14 @@ Cada vez que quieras usar ListaPro, solo necesitas:
 
 **Mac/Linux:**
 ```bash
-cd ~/Documents/listapro
+cd ~/Documents/inmobiliaria
 source venv/bin/activate
 python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 **Windows:**
 ```bash
-cd %USERPROFILE%\Documents\listapro
+cd %USERPROFILE%\Documents\inmobiliaria
 venv\Scripts\activate
 python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
