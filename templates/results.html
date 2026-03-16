@@ -7,14 +7,350 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=6">
+    <link rel="stylesheet" href="/static/style.css?v=17">
+    <style>
+        /* ═══════════════════════════════════════════
+           WIZARD RESULTS — Premium Tabbed Interface
+           ═══════════════════════════════════════════ */
+
+        /* ── Hero (compact) ── */
+        .wizard-hero {
+            background: var(--primary);
+            padding: 2rem 1.5rem 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .wizard-hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .wizard-hero-badge {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c9a84c, #e0c068);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 0.75rem;
+            animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        .wizard-hero-badge svg { width: 24px; height: 24px; color: #fff; }
+        .wizard-hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem; font-weight: 700;
+            color: #f5f0e8; margin: 0 0 0.3rem;
+        }
+        .wizard-hero-sub {
+            font-size: 0.88rem; color: rgba(245,240,232,0.6);
+            font-weight: 500; margin: 0;
+        }
+
+        /* ── Tab Bar ── */
+        .wizard-tabs {
+            display: flex;
+            background: var(--primary);
+            border-bottom: 1px solid rgba(201,168,76,0.15);
+            padding: 0 1rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            justify-content: center;
+            gap: 0;
+        }
+        .wizard-tabs::-webkit-scrollbar { display: none; }
+        .wizard-tab {
+            display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+            padding: 0.85rem 1.2rem 0.65rem;
+            border: none; background: none;
+            cursor: pointer;
+            color: rgba(245,240,232,0.4);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.72rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            position: relative;
+            transition: color 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .wizard-tab:hover { color: rgba(245,240,232,0.7); }
+        .wizard-tab.active { color: #c9a84c; }
+        .wizard-tab::after {
+            content: '';
+            position: absolute; bottom: 0; left: 20%; right: 20%;
+            height: 2px;
+            background: #c9a84c;
+            border-radius: 2px 2px 0 0;
+            transform: scaleX(0);
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .wizard-tab.active::after { transform: scaleX(1); }
+        .wizard-tab-icon {
+            width: 24px; height: 24px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .wizard-tab-icon img { width: 20px; height: 20px; object-fit: contain; }
+        .wizard-tab-icon svg { width: 20px; height: 20px; }
+
+        /* ── Tab Panels ── */
+        .wizard-body {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 1.5rem 2rem;
+            min-height: 400px;
+        }
+        .wizard-panel {
+            display: none;
+            animation: panelFadeIn 0.35s ease;
+            padding-top: 2rem;
+        }
+        .wizard-panel.active { display: block; }
+        @keyframes panelFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .panel-header {
+            margin-bottom: 1.5rem;
+        }
+        .panel-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem; font-weight: 700;
+            color: var(--text-primary); margin: 0 0 0.3rem;
+        }
+        .panel-desc {
+            font-size: 0.85rem; color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* ── Instagram Preview ── */
+        .ig-preview {
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+        }
+        .ig-preview-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--text-primary);
+        }
+        .ig-preview-header .ig-logo {
+            width: 22px; height: 22px; border-radius: 6px;
+        }
+        .ig-preview-image {
+            width: 100%;
+            aspect-ratio: 4/5;
+            object-fit: cover;
+            display: block;
+        }
+        .ig-preview-image--story { aspect-ratio: 9/16; }
+        .ig-preview-actions {
+            display: flex; gap: 0.75rem;
+            padding: 0.5rem 0.85rem 0.25rem;
+        }
+        .ig-preview-actions svg {
+            width: 20px; height: 20px;
+            stroke: var(--text-primary); stroke-width: 2; fill: none;
+        }
+        .ig-preview-caption-box {
+            padding: 0.25rem 0.85rem 0.65rem;
+            font-size: 0.78rem; line-height: 1.45;
+            color: var(--text-primary);
+            max-height: 80px; overflow-y: auto;
+            white-space: pre-wrap; word-break: break-word;
+        }
+        .ig-preview-caption-box::-webkit-scrollbar { width: 3px; }
+        .ig-preview-caption-box::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        .ig-preview-bottom {
+            padding: 0.5rem 0.85rem;
+            font-size: 0.72rem; color: var(--text-secondary);
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+        }
+
+        /* ── Post + Story side by side ── */
+        .ig-row {
+            display: flex; gap: 2rem; align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .ig-col-post { flex: 1; min-width: 260px; max-width: 340px; }
+        .ig-col-story { flex: 0 0 auto; width: 200px; }
+        .ig-actions {
+            display: flex; flex-direction: column; gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .ig-actions .action-group {
+            display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+        }
+
+        /* ── Carousel ── */
+        .carousel-slides-scroll {
+            display: flex; gap: 0.75rem;
+            overflow-x: auto; padding: 0.75rem 0;
+            scroll-snap-type: x mandatory;
+        }
+        .carousel-slides-scroll::-webkit-scrollbar { height: 4px; }
+        .carousel-slides-scroll::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+        .carousel-slide-item {
+            position: relative; flex-shrink: 0; width: 150px;
+            border-radius: 10px; overflow: hidden; cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+            scroll-snap-align: start;
+            border: 2px solid transparent; user-select: none;
+        }
+        .carousel-slide-item:active { cursor: grabbing; }
+        .carousel-slide-item.dragging { opacity: 0.4; transform: scale(0.95); }
+        .carousel-slide-item.drag-over {
+            border-color: var(--accent); transform: scale(1.03);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .carousel-slide-item img {
+            width: 100%; aspect-ratio: 4/5; object-fit: cover;
+            display: block; pointer-events: none;
+        }
+        .carousel-slide-num {
+            position: absolute; top: 6px; left: 6px;
+            background: rgba(0,0,0,0.6); color: #fff;
+            font-size: 0.68rem; font-weight: 600;
+            padding: 2px 7px; border-radius: 6px;
+            z-index: 1; pointer-events: none;
+        }
+        .carousel-drag-hint {
+            font-size: 0.75rem; color: var(--text-secondary);
+            margin-top: 0.35rem;
+            display: flex; align-items: center; gap: 0.3rem;
+        }
+
+        /* ── Email Preview ── */
+        .email-frame {
+            width: 100%; max-width: 620px;
+            border: 1px solid var(--border-light);
+            border-radius: 12px; overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            background: #f4f4f7;
+        }
+        .email-toolbar {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 8px 14px;
+            background: #e8e8ec;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .email-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .email-dot--r { background: #ff5f57; }
+        .email-dot--y { background: #febc2e; }
+        .email-dot--g { background: #28c840; }
+        .email-toolbar-title {
+            flex: 1; text-align: center;
+            font-size: 0.72rem; color: var(--text-secondary); font-weight: 500;
+        }
+        .email-iframe {
+            width: 100%; height: 480px; border: none; display: block;
+        }
+        .email-actions {
+            display: flex; gap: 0.5rem; align-items: center;
+            flex-wrap: wrap; margin-top: 0.75rem;
+        }
+
+        /* ── Video Card ── */
+        .video-card-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+
+        /* ── Publish UI ── */
+        .publish-row {
+            display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+        }
+        .btn-publish {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.5rem 1rem; border: none; border-radius: 8px;
+            font-size: 0.82rem; font-weight: 600; cursor: pointer;
+            background: #E53E3E; color: #fff;
+            transition: background 0.2s, transform 0.1s;
+            font-family: inherit;
+        }
+        .btn-publish:hover { background: #C53030; transform: translateY(-1px); }
+        .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-publish.publishing { pointer-events: none; opacity: 0.7; }
+        .profile-select {
+            padding: 0.45rem 0.75rem;
+            border: 1px solid var(--border-light); border-radius: 8px;
+            font-size: 0.82rem; background: #fff;
+            color: var(--text-primary); font-family: inherit; min-width: 140px;
+        }
+        .publish-status {
+            font-size: 0.8rem; padding: 0.3rem 0.6rem;
+            border-radius: 6px; font-weight: 500;
+        }
+        .publish-status.success { background: #d4edda; color: #155724; }
+        .publish-status.error { background: #f8d7da; color: #721c24; }
+
+        /* ── Bottom Actions ── */
+        .wizard-bottom {
+            text-align: center; padding: 1rem 0 2rem;
+        }
+        .wizard-bottom a {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.75rem 1.8rem;
+            border: 2px solid var(--border-light); border-radius: 12px;
+            color: var(--text-primary); font-weight: 600;
+            text-decoration: none; font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .wizard-bottom a:hover {
+            border-color: var(--accent); color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* ── PDF Card ── */
+        .pdf-card {
+            display: flex; align-items: center; gap: 1.25rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 14px; padding: 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .pdf-card-icon {
+            width: 64px; height: 64px; flex-shrink: 0;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.06));
+            display: flex; align-items: center; justify-content: center;
+        }
+        .pdf-card-info { flex: 1; }
+        .pdf-card-info h4 { margin: 0 0 0.3rem; font-size: 1rem; font-weight: 600; }
+        .pdf-card-info p { margin: 0; font-size: 0.82rem; color: var(--text-secondary); }
+
+        /* ── Shared ── */
+        .media-card-actions {
+            display: flex; flex-direction: column; gap: 0.75rem;
+            padding: 1rem; border-top: 1px solid var(--border-light);
+        }
+        .media-card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 1rem; border-top: 1px solid var(--border-light);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
 </head>
 <body>
     <header class="header">
         <div class="header-inner">
-            <div class="header-logo">
-                <h1>Lista<span>Pro</span></h1>
-            </div>
+            <div class="header-logo"><h1>Lista<span>Pro</span></h1></div>
             <nav class="header-nav">
                 <a href="/" class="header-nav-link">+ Nuevo Listado</a>
                 <a href="/plantilla" class="header-nav-link">Plantilla</a>
@@ -23,86 +359,313 @@
         </div>
     </header>
 
-    <main class="container" style="margin-top: 2rem;">
-        <div class="results-header">
-            <div class="success-check">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-            <h2>Tu Listado Está Listo</h2>
-            <p>{{ tipo_propiedad }} en {{ operacion | lower }} — {{ ciudad }}, {{ pais_nombre }}</p>
+    <!-- ── HERO (compact) ── -->
+    <div class="wizard-hero">
+        <div class="wizard-hero-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
+        <h2 class="wizard-hero-title">Tu Listado Está Listo</h2>
+        <p class="wizard-hero-sub">{{ tipo_propiedad }} en {{ operacion | lower }} — {{ ciudad }}, {{ pais_nombre }}</p>
+    </div>
 
+    <!-- ── TAB BAR ── -->
+    <nav class="wizard-tabs" id="wizardTabs">
+        {% if pdf_filename %}
+        <button class="wizard-tab active" data-tab="pdf">
+            <span class="wizard-tab-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </span>
+            PDF
+        </button>
+        {% endif %}
+
+        {% if instagram_filename %}
+        <button class="wizard-tab{% if not pdf_filename %} active{% endif %}" data-tab="post">
+            <span class="wizard-tab-icon">
+                <img src="https://ik.imagekit.io/horizontesia/luminary/Instagram_logo_2022.svg%20(6).webp" alt="IG">
+            </span>
+            Post
+        </button>
+        {% endif %}
+
+        {% if story_filename %}
+        <button class="wizard-tab" data-tab="story">
+            <span class="wizard-tab-icon">
+                <img src="https://ik.imagekit.io/horizontesia/luminary/Instagram_logo_2022.svg%20(6).webp" alt="IG">
+            </span>
+            Story
+        </button>
+        {% endif %}
+
+        {% if carousel_slides %}
+        <button class="wizard-tab" data-tab="carousel">
+            <span class="wizard-tab-icon">
+                <img src="https://ik.imagekit.io/horizontesia/luminary/Instagram_logo_2022.svg%20(6).webp" alt="IG">
+            </span>
+            Carrusel
+        </button>
+        {% endif %}
+
+        {% if email_filename %}
+        <button class="wizard-tab" data-tab="email">
+            <span class="wizard-tab-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+            </span>
+            Email
+        </button>
+        {% endif %}
+
+        {% if job_id %}
+        <button class="wizard-tab" data-tab="video">
+            <span class="wizard-tab-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </span>
+            Video
+        </button>
+        {% endif %}
+    </nav>
+
+    <!-- ── PANELS ── -->
+    <main class="wizard-body">
         {% if error %}
         <div class="error-box">{{ error }}</div>
         {% endif %}
 
-        <!-- PDF DOWNLOAD -->
+        <!-- ══════ PDF ══════ -->
         {% if pdf_filename %}
-        <div class="result-card" style="text-align: center;">
-            <h3>
-                <span>📄 Ficha PDF Profesional</span>
-            </h3>
-            <p style="margin-bottom: 1rem; color: var(--text-light);">
-                Tu ficha inmobiliaria está lista para descargar e imprimir.
-            </p>
-            <a href="/descargar/{{ pdf_filename }}" class="btn-download" download>
-                📥 Descargar PDF
-            </a>
+        <div class="wizard-panel active" id="panel-pdf">
+            <div class="panel-header">
+                <h3 class="panel-title">Documento Profesional</h3>
+                <p class="panel-desc">Ficha inmobiliaria lista para imprimir y compartir</p>
+            </div>
+            <div class="pdf-card">
+                <div class="pdf-card-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <div class="pdf-card-info">
+                    <h4>Ficha PDF Profesional</h4>
+                    <p>Incluye fotos, descripción, especificaciones y datos de contacto</p>
+                </div>
+                <a href="/descargar/{{ pdf_filename }}" class="btn-download-main" download>📥 Descargar PDF</a>
+            </div>
         </div>
         {% endif %}
 
-        <!-- VIDEO REEL -->
-        {% if job_id %}
-        <div class="result-card" id="videoCard" style="text-align: center;">
-            <h3>
-                <span>🎬 Video Reel (Instagram / TikTok)</span>
-            </h3>
-            <div id="videoStatus">
-                <div class="video-rendering">
-                    <div class="video-spinner"></div>
-                    <p class="video-spinner-text">
-                        Generando música de fondo con IA...
-                    </p>
+        <!-- ══════ POST ══════ -->
+        {% if instagram_filename %}
+        <div class="wizard-panel{% if not pdf_filename %} active{% endif %}" id="panel-post">
+            <div class="panel-header">
+                <h3 class="panel-title">Instagram Post</h3>
+                <p class="panel-desc">Imagen optimizada para el feed de Instagram</p>
+            </div>
+            <div style="max-width:380px;">
+                <div class="ig-preview">
+                    <div class="ig-preview-header">
+                        <img class="ig-logo" src="https://ik.imagekit.io/horizontesia/luminary/Instagram_logo_2022.svg%20(6).webp" alt="IG">
+                        <span>Instagram Post</span>
+                    </div>
+                    <img class="ig-preview-image" src="/descargar/{{ instagram_filename }}" alt="Instagram Post" loading="lazy">
+                    <div class="ig-preview-actions">
+                        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </div>
+                    {% if copy_instagram %}
+                    <div class="ig-preview-caption-box" id="instaCopy">{{ copy_instagram }}</div>
+                    {% endif %}
+                </div>
+                <div class="ig-actions">
+                    <div class="action-group">
+                        <a href="/descargar/{{ instagram_filename }}" class="media-card-btn" download>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            Descargar
+                        </a>
+                        {% if copy_instagram %}
+                        <button class="btn-copy" onclick="copyText('instaCopy', this)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                            Caption
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% if upload_profiles %}
+                    <div class="publish-row" data-type="post">
+                        <select class="profile-select" data-target="post">
+                            {% for p in upload_profiles %}
+                            <option value="{{ p.user }}">{{ p.user }}{% if p.instagram %} (@{{ p.instagram }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn-publish" onclick="publishContent('post', this)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            Publicar
+                        </button>
+                        <span class="publish-status" style="display:none"></span>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% endif %}
 
-        <!-- INSTAGRAM / FACEBOOK -->
-        <div class="result-card">
-            <h3>
-                <span>📱 Copy para Instagram / Facebook</span>
-                <button class="btn-copy" onclick="copyText('instaCopy', this)">Copiar</button>
-            </h3>
-            <div class="content-box" id="instaCopy">{{ copy_instagram }}</div>
-        </div>
-
-        <!-- WHATSAPP -->
-        <div class="result-card">
-            <h3>
-                <span>💬 Mensaje para WhatsApp</span>
-                <button class="btn-copy" onclick="copyText('whatsappCopy', this)">Copiar</button>
-            </h3>
-            <div class="content-box" id="whatsappCopy">{{ mensaje_whatsapp }}</div>
-            <div style="margin-top: 1rem;">
-                <a href="https://wa.me/?text={{ mensaje_whatsapp_encoded }}" target="_blank" class="btn-whatsapp">
-                    📲 Enviar por WhatsApp
-                </a>
+        <!-- ══════ STORY ══════ -->
+        {% if story_filename %}
+        <div class="wizard-panel" id="panel-story">
+            <div class="panel-header">
+                <h3 class="panel-title">Instagram Story</h3>
+                <p class="panel-desc">Diseño vertical optimizado para Stories</p>
+            </div>
+            <div style="max-width:240px;">
+                <div class="ig-preview">
+                    <div class="ig-preview-header">
+                        <img class="ig-logo" src="https://ik.imagekit.io/horizontesia/luminary/Instagram_logo_2022.svg%20(6).webp" alt="IG">
+                        <span>Story</span>
+                    </div>
+                    <img class="ig-preview-image ig-preview-image--story" src="/descargar/{{ story_filename }}" alt="Instagram Story" loading="lazy">
+                    <div class="ig-preview-bottom">1080 × 1920</div>
+                </div>
+                <div class="ig-actions">
+                    <div class="action-group">
+                        <a href="/descargar/{{ story_filename }}" class="media-card-btn" download>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            Descargar
+                        </a>
+                    </div>
+                    {% if upload_profiles %}
+                    <div class="publish-row" data-type="story">
+                        <select class="profile-select" data-target="story">
+                            {% for p in upload_profiles %}
+                            <option value="{{ p.user }}">{{ p.user }}{% if p.instagram %} (@{{ p.instagram }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn-publish" onclick="publishContent('story', this)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            Publicar
+                        </button>
+                        <span class="publish-status" style="display:none"></span>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
+        {% endif %}
 
-        <!-- DESCRIPCIÓN PDF -->
-        <div class="result-card">
-            <h3>
-                <span>📝 Descripción del PDF</span>
-                <button class="btn-copy" onclick="copyText('pdfCopy', this)">Copiar</button>
-            </h3>
-            <div class="content-box" id="pdfCopy">{{ descripcion_pdf }}</div>
+        <!-- ══════ CAROUSEL ══════ -->
+        {% if carousel_slides %}
+        <div class="wizard-panel" id="panel-carousel">
+            <div class="panel-header">
+                <h3 class="panel-title">Carrusel Instagram</h3>
+                <p class="panel-desc">{{ carousel_slides | length }} slides — arrastra para reordenar</p>
+            </div>
+
+            <div class="carousel-slides-scroll" id="carouselContainer">
+                {% for slide in carousel_slides %}
+                <div class="carousel-slide-item" draggable="true" data-slide-path="{{ slide }}" data-index="{{ loop.index0 }}">
+                    <span class="carousel-slide-num">{{ loop.index }}/{{ carousel_slides | length }}</span>
+                    <img src="/descargar/{{ slide }}" alt="Slide {{ loop.index }}" loading="lazy">
+                </div>
+                {% endfor %}
+            </div>
+            <p class="carousel-drag-hint">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7"/></svg>
+                Arrastra las slides para cambiar el orden
+            </p>
+
+            <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.75rem;">
+                <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                    {% if carousel_zip %}
+                    <a href="/descargar/{{ carousel_zip }}" class="media-card-btn" download>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Descargar ZIP
+                    </a>
+                    {% endif %}
+                </div>
+                {% if upload_profiles %}
+                <div class="publish-row" data-type="carousel">
+                    <select class="profile-select" data-target="carousel">
+                        {% for p in upload_profiles %}
+                        <option value="{{ p.user }}">{{ p.user }}{% if p.instagram %} (@{{ p.instagram }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn-publish" onclick="publishContent('carousel', this)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        Publicar Carrusel
+                    </button>
+                    <span class="publish-status" style="display:none"></span>
+                </div>
+                {% endif %}
+            </div>
         </div>
+        {% endif %}
 
-        <!-- ACTIONS -->
-        <div class="results-actions">
-            <a href="/" class="btn-new">+ Generar Otro Listado</a>
+        <!-- ══════ EMAIL ══════ -->
+        {% if email_filename %}
+        <div class="wizard-panel" id="panel-email">
+            <div class="panel-header">
+                <h3 class="panel-title">Email Marketing</h3>
+                <p class="panel-desc">Plantilla profesional lista para enviar</p>
+            </div>
+
+            <div class="email-frame">
+                <div class="email-toolbar">
+                    <span class="email-dot email-dot--r"></span>
+                    <span class="email-dot email-dot--y"></span>
+                    <span class="email-dot email-dot--g"></span>
+                    <span class="email-toolbar-title">Vista previa del email</span>
+                </div>
+                <iframe class="email-iframe" id="emailPreviewFrame" sandbox="allow-same-origin allow-scripts" title="Email preview"></iframe>
+            </div>
+
+            <div class="email-actions">
+                <a href="/descargar/{{ email_filename }}" class="media-card-btn" download="email_listado.html">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Descargar HTML
+                </a>
+                <button class="btn-copy" onclick="copyEmailHTML(this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    Copiar HTML
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ══════ VIDEO ══════ -->
+        {% if job_id %}
+        <div class="wizard-panel" id="panel-video">
+            <div class="panel-header">
+                <h3 class="panel-title">Video Reel</h3>
+                <p class="panel-desc">Video vertical con música generada por IA</p>
+            </div>
+
+            <div class="video-card-wrapper" id="videoCard">
+                <div class="media-card-badge" style="padding:0.5rem 1rem; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent);">Video Reel</div>
+                <div class="media-card-preview" id="videoStatus">
+                    <div class="video-generating">
+                        <div class="video-pulse-ring"></div>
+                        <div class="video-pulse-icon">🎬</div>
+                        <p class="video-status-text">Generando música con IA...</p>
+                        <div class="video-timer" id="videoTimer" style="margin-top:0.75rem;font-size:0.85rem;color:rgba(255,255,255,0.5);font-weight:500;">
+                            <span id="videoTimerText">Tiempo estimado: ~5 minutos</span>
+                        </div>
+                        <div class="video-progress-bar" style="margin-top:0.75rem;width:80%;max-width:280px;height:4px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;">
+                            <div id="videoProgressFill" style="height:100%;width:0%;background:linear-gradient(90deg,#c9a84c,#e0c068);border-radius:4px;transition:width 1s linear;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="media-card-footer" id="videoFooter">
+                    <span class="media-card-size">1080 × 1920 · MP4</span>
+                </div>
+            </div>
+            <p style="font-size:0.82rem;color:var(--text-secondary);margin-top:0.75rem;text-align:center;">
+                Puedes descargar el resto de tu contenido mientras el video se genera
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- ── Bottom ── -->
+        <div class="wizard-bottom">
+            <a href="/">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Generar Otro Listado
+            </a>
         </div>
     </main>
 
@@ -111,65 +674,313 @@
     </footer>
 
     <script>
+        /* ═══════ Tab Navigation ═══════ */
+        (function() {
+            var tabs = document.querySelectorAll('.wizard-tab');
+            var panels = document.querySelectorAll('.wizard-panel');
+
+            tabs.forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    var target = tab.dataset.tab;
+
+                    tabs.forEach(function(t) { t.classList.remove('active'); });
+                    tab.classList.add('active');
+
+                    panels.forEach(function(p) { p.classList.remove('active'); });
+                    var panel = document.getElementById('panel-' + target);
+                    if (panel) {
+                        panel.classList.remove('active');
+                        // Force reflow for animation
+                        void panel.offsetWidth;
+                        panel.classList.add('active');
+                    }
+                });
+            });
+        })();
+
+        /* ═══════ Copy to clipboard ═══════ */
         function copyText(elementId, btn) {
-            const text = document.getElementById(elementId).textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const original = btn.textContent;
-                btn.textContent = 'Copiado';
+            var text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                var original = btn.innerHTML;
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copiado';
                 btn.classList.add('copied');
-                setTimeout(() => {
-                    btn.textContent = original;
-                    btn.classList.remove('copied');
-                }, 2000);
+                setTimeout(function() { btn.innerHTML = original; btn.classList.remove('copied'); }, 2000);
             });
         }
 
-        // Video polling
+        /* ═══════ Copy email HTML ═══════ */
+        function copyEmailHTML(btn) {
+            var iframe = document.getElementById('emailPreviewFrame');
+            var html = iframe.srcdoc || '';
+            navigator.clipboard.writeText(html).then(function() {
+                var original = btn.innerHTML;
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copiado';
+                btn.classList.add('copied');
+                setTimeout(function() { btn.innerHTML = original; btn.classList.remove('copied'); }, 2000);
+            });
+        }
+
+        /* ═══════ Email preview ═══════ */
+        {% if email_html_preview %}
+        (function() {
+            var iframe = document.getElementById('emailPreviewFrame');
+            if (iframe) iframe.srcdoc = {{ email_html_preview | tojson }};
+        })();
+        {% endif %}
+
+        /* ═══════ Carousel Drag & Drop ═══════ */
+        (function() {
+            var container = document.getElementById('carouselContainer');
+            if (!container) return;
+            var dragItem = null;
+
+            container.addEventListener('dragstart', function(e) {
+                var item = e.target.closest('.carousel-slide-item');
+                if (!item) return;
+                dragItem = item;
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', '');
+            });
+
+            container.addEventListener('dragend', function(e) {
+                var item = e.target.closest('.carousel-slide-item');
+                if (item) item.classList.remove('dragging');
+                container.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+                dragItem = null;
+                updateSlideNumbers();
+            });
+
+            container.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                var target = e.target.closest('.carousel-slide-item');
+                if (!target || target === dragItem) return;
+                container.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+                target.classList.add('drag-over');
+            });
+
+            container.addEventListener('dragleave', function(e) {
+                var target = e.target.closest('.carousel-slide-item');
+                if (target) target.classList.remove('drag-over');
+            });
+
+            container.addEventListener('drop', function(e) {
+                e.preventDefault();
+                var target = e.target.closest('.carousel-slide-item');
+                if (!target || !dragItem || target === dragItem) return;
+                target.classList.remove('drag-over');
+                var items = Array.from(container.querySelectorAll('.carousel-slide-item'));
+                var dragIdx = items.indexOf(dragItem);
+                var targetIdx = items.indexOf(target);
+                if (dragIdx < targetIdx) {
+                    container.insertBefore(dragItem, target.nextSibling);
+                } else {
+                    container.insertBefore(dragItem, target);
+                }
+                updateSlideNumbers();
+            });
+
+            function updateSlideNumbers() {
+                var items = container.querySelectorAll('.carousel-slide-item');
+                var total = items.length;
+                items.forEach(function(item, i) {
+                    var num = item.querySelector('.carousel-slide-num');
+                    if (num) num.textContent = (i + 1) + '/' + total;
+                    item.dataset.index = i;
+                });
+            }
+        })();
+
+        function getCarouselOrder() {
+            var container = document.getElementById('carouselContainer');
+            if (!container) return '';
+            return Array.from(container.querySelectorAll('.carousel-slide-item'))
+                .map(function(item) { return item.dataset.slidePath; }).join(',');
+        }
+
+        /* ═══════ Publish to Instagram ═══════ */
+        var JOB_ID = "{{ job_id }}";
+
+        function publishContent(type, btn) {
+            var row = btn.closest('.publish-row');
+            var select = row.querySelector('.profile-select');
+            var statusEl = row.querySelector('.publish-status');
+            var user = select.value;
+
+            btn.classList.add('publishing');
+            btn.disabled = true;
+            var origHTML = btn.innerHTML;
+            btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Publicando...';
+            statusEl.style.display = 'none';
+
+            var formData = new FormData();
+            formData.append('user', user);
+            if (type === 'carousel') {
+                formData.append('slides_order', getCarouselOrder());
+            }
+
+            var controller = new AbortController();
+            var timeoutMs = type === 'reel' ? 300000 : 60000;
+            var timeoutId = setTimeout(function() { controller.abort(); }, timeoutMs);
+
+            if (type === 'reel') {
+                btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Subiendo video...';
+            }
+
+            fetch('/api/publicar/' + type + '/' + JOB_ID, { method: 'POST', body: formData, signal: controller.signal })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                clearTimeout(timeoutId);
+                btn.classList.remove('publishing');
+                btn.disabled = false;
+                if (data.success !== false && !data.error) {
+                    if (data.request_id) {
+                        statusEl.textContent = '✅ Video enviado — procesando en Instagram...';
+                        statusEl.className = 'publish-status success';
+                        btn.innerHTML = '✅ Enviado';
+                    } else {
+                        statusEl.textContent = '✅ Publicado';
+                        statusEl.className = 'publish-status success';
+                        btn.innerHTML = '✅ Publicado';
+                    }
+                } else {
+                    statusEl.textContent = '❌ ' + (data.error || 'Error');
+                    statusEl.className = 'publish-status error';
+                    btn.innerHTML = origHTML;
+                }
+                statusEl.style.display = 'inline-block';
+            })
+            .catch(function(err) {
+                clearTimeout(timeoutId);
+                btn.classList.remove('publishing');
+                btn.disabled = false;
+                console.error('Publish error:', err);
+                var msg = err.name === 'AbortError'
+                    ? '❌ Timeout — el video es muy grande, intenta de nuevo'
+                    : '❌ Error de red — verifica tu conexión e intenta de nuevo';
+                statusEl.textContent = msg;
+                statusEl.className = 'publish-status error';
+                statusEl.style.display = 'inline-block';
+                btn.innerHTML = origHTML;
+            });
+        }
+
+        /* ═══════ Video polling ═══════ */
         {% if job_id %}
         (function() {
-            const jobId = "{{ job_id }}";
-            const statusDiv = document.getElementById("videoStatus");
-            let pollCount = 0;
-            const maxPolls = 100;
+            var jobId = "{{ job_id }}";
+            var statusDiv = document.getElementById("videoStatus");
+            var videoCard = document.getElementById("videoCard");
+            var videoFooter = document.getElementById("videoFooter");
+            var pollCount = 0;
+            var maxPolls = 400;
 
-            const statusMessages = {
-                generating_music: "Generando música de fondo con IA...",
-                rendering: "Renderizando video reel...",
+            function showVideoError(title, detail) {
+                statusDiv.innerHTML =
+                    '<div class="video-error-state">' +
+                    '<p>' + title + '</p>' +
+                    (detail ? '<p class="video-error-hint">' + detail + '</p>' : '') +
+                    '<button class="btn-retry-video" onclick="window._retryVideo()">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>' +
+                    ' Reintentar</button></div>';
+            }
+
+            window._retryVideo = function() {
+                statusDiv.innerHTML =
+                    '<div class="video-generating">' +
+                    '<div class="video-pulse-ring"></div>' +
+                    '<div class="video-pulse-icon">🎬</div>' +
+                    '<p class="video-status-text">Reintentando generación...</p></div>';
+                pollCount = 0;
+                fetch("/api/video/retry/" + jobId, { method: "POST" })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            setTimeout(pollVideoStatus, 3000);
+                        } else {
+                            showVideoError("No se pudo reintentar", data.error || "Error desconocido");
+                        }
+                    })
+                    .catch(function() {
+                        showVideoError("Error de conexión al reintentar");
+                    });
             };
+
+            var statusMessages = {
+                generating_music: "Generando música con IA...",
+                rendering: "Renderizando video con las fotos..."
+            };
+
+            var ESTIMATED_SECONDS = 300;
+            var elapsedSeconds = 0;
+            var timerText = document.getElementById('videoTimerText');
+            var progressFill = document.getElementById('videoProgressFill');
+
+            var timerInterval = setInterval(function() {
+                elapsedSeconds++;
+                var remaining = Math.max(0, ESTIMATED_SECONDS - elapsedSeconds);
+                var mins = Math.floor(remaining / 60);
+                var secs = remaining % 60;
+                if (timerText) {
+                    if (remaining > 0) {
+                        timerText.textContent = 'Tiempo estimado: ~' + mins + ':' + (secs < 10 ? '0' : '') + secs;
+                    } else {
+                        timerText.textContent = 'Casi listo, finalizando...';
+                    }
+                }
+                if (progressFill) {
+                    var pct = Math.min(95, (elapsedSeconds / ESTIMATED_SECONDS) * 100);
+                    progressFill.style.width = pct + '%';
+                }
+            }, 1000);
 
             function pollVideoStatus() {
                 pollCount++;
                 if (pollCount > maxPolls) {
-                    statusDiv.innerHTML = '<div class="video-failed">El video tardó demasiado. Intenta generar otro listado.</div>';
+                    clearInterval(timerInterval);
+                    showVideoError("El video tardó demasiado.", "La generación puede tardar hasta 15 minutos. Puedes reintentar.");
                     return;
                 }
 
                 fetch("/video/status/" + jobId)
-                    .then(r => r.json())
-                    .then(data => {
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
                         if (data.status === "ready") {
-                            statusDiv.innerHTML = `
-                                <p style="margin-bottom: 1rem; color: var(--text-light);">
-                                    Tu video reel vertical (9:16) está listo.
-                                </p>
-                                <a href="/descargar/${data.filename}" class="btn-video-download" download>
-                                    🎬 Descargar Video Reel
-                                </a>
-                            `;
+                            clearInterval(timerInterval);
+                            statusDiv.innerHTML = '<div class="video-ready-state"><div class="video-ready-icon">✅</div><p>Video reel listo</p></div>';
+                            videoFooter.innerHTML =
+                                '<span class="media-card-size">1080 × 1920 · MP4</span>' +
+                                '<a href="/descargar/' + data.filename + '" class="media-card-btn" download>' +
+                                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>' +
+                                ' Descargar</a>';
+                            {% if upload_profiles %}
+                            var pubSection = document.createElement('div');
+                            pubSection.className = 'media-card-actions';
+                            pubSection.innerHTML =
+                                '<div class="publish-row" data-type="reel">' +
+                                '<select class="profile-select" data-target="reel">' +
+                                '{% for p in upload_profiles %}<option value="{{ p.user }}">{{ p.user }}{% if p.instagram %} (@{{ p.instagram }}){% endif %}</option>{% endfor %}' +
+                                '</select>' +
+                                '<button class="btn-publish" onclick="publishContent(\'reel\', this)">' +
+                                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
+                                ' Publicar Reel</button>' +
+                                '<span class="publish-status" style="display:none"></span></div>';
+                            videoCard.appendChild(pubSection);
+                            {% endif %}
                         } else if (data.status === "failed") {
-                            statusDiv.innerHTML = '<div class="video-failed">No se pudo generar el video: ' + (data.error || 'Error desconocido') + '</div>';
+                            clearInterval(timerInterval);
+                            showVideoError("No se pudo generar el video", data.error || 'Error desconocido');
                         } else {
-                            const msg = statusMessages[data.status] || "Procesando video...";
-                            const spinner = statusDiv.querySelector('.video-spinner-text');
+                            var msg = statusMessages[data.status] || "Procesando video...";
+                            var spinner = statusDiv.querySelector('.video-status-text');
                             if (spinner) spinner.textContent = msg;
                             setTimeout(pollVideoStatus, 3000);
                         }
                     })
-                    .catch(() => {
-                        setTimeout(pollVideoStatus, 5000);
-                    });
+                    .catch(function() { setTimeout(pollVideoStatus, 5000); });
             }
-
             setTimeout(pollVideoStatus, 2000);
         })();
         {% endif %}

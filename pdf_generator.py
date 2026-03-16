@@ -1,8 +1,24 @@
+import re
 import tempfile
 import qrcode
 from pathlib import Path
 from fpdf import FPDF
 from PIL import Image
+from labels import get_label, get_operation, get_property_type
+
+
+def _strip_emojis(text: str) -> str:
+    """Remove emoji characters that FPDF/Helvetica cannot render."""
+    return re.sub(
+        r'[\U00010000-\U0010ffff'
+        r'\U00002702-\U000027B0'
+        r'\U0000FE00-\U0000FE0F'
+        r'\U0000200D'
+        r'\U000024C2-\U0001F251'
+        r'\u2600-\u26FF'
+        r'\u2700-\u27BF]+',
+        '', text
+    )
 
 BASE_DIR = Path(__file__).parent
 GENERATED_DIR = BASE_DIR / "generated"
@@ -80,24 +96,24 @@ def crop_to_fill(photo_path: str, target_w_mm: float, target_h_mm: float, prefix
 # Shared helpers
 # ──────────────────────────────────────────────────────────
 
-def _extract_stats(property_data: dict) -> list:
+def _extract_stats(property_data: dict, lang: str = "es") -> list:
     """Extract stats list from property data."""
     stats = []
     rec = property_data.get("recamaras", "0")
     if rec and rec != "0":
-        stats.append((rec, "Recámaras"))
+        stats.append((rec, get_label("recamaras_full", lang)))
     ban = property_data.get("banos", "0")
     if ban and ban != "0":
-        stats.append((ban, "Baños"))
+        stats.append((ban, get_label("banos_full", lang)))
     m2c = property_data.get("m2_construidos", "")
     if m2c:
-        stats.append((m2c, "m² Constr."))
+        stats.append((m2c, get_label("m2_construidos_full", lang)))
     m2t = property_data.get("m2_terreno", "")
     if m2t:
-        stats.append((m2t, "m² Terreno"))
+        stats.append((m2t, get_label("m2_terreno_full", lang)))
     est = property_data.get("estacionamientos", "0")
     if est and est != "0":
-        stats.append((est, "Estac."))
+        stats.append((est, get_label("estacionamientos_full", lang)))
     return stats
 
 
@@ -199,7 +215,7 @@ def _render_footer(pdf, property_data: dict, footer_y: float = 275, branding=Non
         pdf.cell(55, 4, "Generado con ListaPro", align="R")
 
 
-def _render_amenities(pdf, amenidades: list, start_y: float):
+def _render_amenities(pdf, amenidades: list, start_y: float, lang: str = "es"):
     """Render amenities section (shared by both templates)."""
     if not amenidades:
         return
@@ -209,7 +225,7 @@ def _render_amenities(pdf, amenidades: list, start_y: float):
     pdf.set_text_color(*pdf.PRIMARY)
     pdf.set_font("Helvetica", "B", 11)
     pdf.set_xy(15, am_y)
-    pdf.cell(180, 7, "Amenidades", ln=True)
+    pdf.cell(180, 7, get_label("amenidades", lang), ln=True)
     pdf.set_draw_color(*pdf.BORDER)
     pdf.line(15, am_y + 8, 195, am_y + 8)
 
@@ -231,8 +247,8 @@ def _render_amenities(pdf, amenidades: list, start_y: float):
         tag_x += tag_w + 3
 
 
-def _render_gallery_page(pdf, photos: list, property_data: dict, grid_uniform: bool = False, branding=None):
-    """Render page 2: gallery + specs table."""
+def _render_gallery_page(pdf, photos: list, property_data: dict, grid_uniform: bool = False, branding=None, lang: str = "es"):
+    """Render page 2+: gallery photos, then specs table (auto-paginated)."""
     pdf.add_page()
 
     tipo = property_data.get("tipo_propiedad", "")
@@ -246,29 +262,38 @@ def _render_gallery_page(pdf, photos: list, property_data: dict, grid_uniform: b
     pdf.set_text_color(*pdf.PRIMARY)
     pdf.set_font("Helvetica", "B", 14)
     pdf.set_xy(15, 15)
-    pdf.cell(180, 8, "Galería de Fotos")
+    pdf.cell(180, 8, get_label("galeria", lang))
     pdf.set_draw_color(*pdf.BORDER)
     pdf.line(15, 24, 195, 24)
 
-    gallery_photos = photos[1:7]  # Up to 6 additional
+    gallery_photos = photos[1:9]  # Up to 8 additional
     photo_y = 28
+    PAGE_BOTTOM = 270  # Leave room for footer
 
     if grid_uniform:
-        # Uniform 2×3 grid: each 88mm × 55mm
+        # Uniform 2-col grid
         col_w = 88
         row_h = 55
         for i, photo in enumerate(gallery_photos):
             col = i % 2
-            row = i // 2
+            y = photo_y
+            # Check if this row fits on the current page
+            if col == 0 and photo_y + row_h > PAGE_BOTTOM:
+                _render_footer(pdf, property_data, branding=branding)
+                pdf.add_page()
+                photo_y = 15
+                y = photo_y
             x = 15 + col * (col_w + 4)
-            y = photo_y + row * (row_h + 3)
             try:
                 cropped = crop_to_fill(photo, col_w, row_h, f"gu{i}")
                 pdf.image(cropped, x=x, y=y, w=col_w, h=row_h)
             except Exception:
                 pass
-        rows_used = (len(gallery_photos) + 1) // 2
-        photo_y = photo_y + rows_used * (row_h + 3)
+            if col == 1:
+                photo_y += row_h + 3
+        # If last row had only one photo, advance photo_y
+        if len(gallery_photos) % 2 == 1:
+            photo_y += row_h + 3
     else:
         # Classic: 1 large + 2-col grid
         if len(gallery_photos) >= 1:
@@ -282,6 +307,11 @@ def _render_gallery_page(pdf, photos: list, property_data: dict, grid_uniform: b
         col_w = 88
         for i, photo in enumerate(gallery_photos[1:], 1):
             col = (i - 1) % 2
+            # Check if this row fits on the current page
+            if col == 0 and photo_y + 55 > PAGE_BOTTOM:
+                _render_footer(pdf, property_data, branding=branding)
+                pdf.add_page()
+                photo_y = 15
             x = 15 + col * (col_w + 4)
             try:
                 cropped = crop_to_fill(photo, col_w, 55, f"gt{i}")
@@ -293,15 +323,8 @@ def _render_gallery_page(pdf, photos: list, property_data: dict, grid_uniform: b
         if (len(gallery_photos) - 1) % 2 == 1:
             photo_y += 58
 
-    # Specs table
-    specs_y = min(photo_y + 5, 200)
-    pdf.set_text_color(*pdf.PRIMARY)
-    pdf.set_font("Helvetica", "B", 12)
-    pdf.set_xy(15, specs_y)
-    pdf.cell(180, 7, "Especificaciones")
-    pdf.set_draw_color(*pdf.BORDER)
-    pdf.line(15, specs_y + 8, 195, specs_y + 8)
-
+    # Specs table — check if enough space remains on current page
+    # Need ~11 (header) + num_specs*8 mm for the table
     rec = property_data.get("recamaras", "0")
     ban = property_data.get("banos", "0")
     m2c = property_data.get("m2_construidos", "")
@@ -309,32 +332,52 @@ def _render_gallery_page(pdf, photos: list, property_data: dict, grid_uniform: b
     est = property_data.get("estacionamientos", "0")
 
     specs = [
-        ("Tipo de propiedad", tipo),
-        ("Operación", operacion),
-        ("Precio", precio_fmt),
-        ("Ubicación", location),
+        (get_label("tipo_propiedad", lang), tipo),
+        (get_label("operacion_label", lang), operacion),
+        (get_label("precio_label", lang), precio_fmt),
+        (get_label("ubicacion", lang), location),
     ]
     direccion = property_data.get("direccion", "")
     if direccion:
-        specs.append(("Dirección", direccion))
+        specs.append((get_label("direccion", lang), direccion))
     if rec and rec != "0":
-        specs.append(("Recámaras", rec))
+        specs.append((get_label("recamaras_full", lang), rec))
     if ban and ban != "0":
-        specs.append(("Baños", ban))
+        specs.append((get_label("banos_full", lang), ban))
     if m2c:
-        specs.append(("Superficie construida", f"{m2c} m²"))
+        specs.append((get_label("superficie_construida", lang), f"{m2c} m²"))
     if m2t:
-        specs.append(("Superficie terreno", f"{m2t} m²"))
+        specs.append((get_label("superficie_terreno", lang), f"{m2t} m²"))
     if est and est != "0":
-        specs.append(("Estacionamientos", est))
+        specs.append((get_label("estacionamientos_full", lang), est))
     pisos = property_data.get("pisos", "1")
     if pisos and pisos != "1":
-        specs.append(("Pisos / Niveles", pisos))
+        specs.append((get_label("pisos_niveles", lang), pisos))
+
+    specs_height_needed = 15 + len(specs) * 8  # title + rows
+    space_left = PAGE_BOTTOM - photo_y
+
+    if space_left < specs_height_needed:
+        # Not enough room — start specs on a new page
+        _render_footer(pdf, property_data, branding=branding)
+        pdf.add_page()
+        specs_y = 15
+    else:
+        specs_y = photo_y + 5
+
+    pdf.set_text_color(*pdf.PRIMARY)
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.set_xy(15, specs_y)
+    pdf.cell(180, 7, get_label("especificaciones", lang))
+    pdf.set_draw_color(*pdf.BORDER)
+    pdf.line(15, specs_y + 8, 195, specs_y + 8)
 
     row_y = specs_y + 11
     for label, value in specs:
-        if row_y > 265:
-            break
+        if row_y > PAGE_BOTTOM:
+            _render_footer(pdf, property_data, branding=branding)
+            pdf.add_page()
+            row_y = 15
         pdf.set_font("Helvetica", "B", 8.5)
         pdf.set_text_color(*pdf.PRIMARY)
         pdf.set_xy(15, row_y)
@@ -354,7 +397,7 @@ def _render_gallery_page(pdf, photos: list, property_data: dict, grid_uniform: b
 # Variante A — Clásico
 # ──────────────────────────────────────────────────────────
 
-def _render_clasico(pdf, property_data: dict, photos: list, branding=None):
+def _render_clasico(pdf, property_data: dict, photos: list, branding=None, lang: str = "es"):
     """Render classic template: full-bleed hero, gradient overlay, stats bar."""
     pdf.add_page()
 
@@ -437,7 +480,7 @@ def _render_clasico(pdf, property_data: dict, photos: list, branding=None):
     pdf.set_fill_color(*pdf.STAT_BG)
     pdf.rect(0, stats_y, 210, 22, "F")
 
-    stats = _extract_stats(property_data)
+    stats = _extract_stats(property_data, lang)
     if stats:
         stat_width = 180 / len(stats)
         start_x = 15
@@ -456,11 +499,11 @@ def _render_clasico(pdf, property_data: dict, photos: list, branding=None):
     pdf.set_text_color(*pdf.PRIMARY)
     pdf.set_font("Helvetica", "B", 13)
     pdf.set_xy(15, desc_y)
-    pdf.cell(180, 8, "Descripción", ln=True)
+    pdf.cell(180, 8, get_label("descripcion", lang), ln=True)
     pdf.set_draw_color(*pdf.BORDER)
     pdf.line(15, desc_y + 9, 195, desc_y + 9)
 
-    descripcion = property_data.get("descripcion", "")
+    descripcion = _strip_emojis(property_data.get("descripcion", ""))
     pdf.set_text_color(*pdf.TEXT_DARK)
     pdf.set_font("Helvetica", "", 9.5)
     pdf.set_xy(15, desc_y + 13)
@@ -473,21 +516,21 @@ def _render_clasico(pdf, property_data: dict, photos: list, branding=None):
     otras = property_data.get("otras_amenidades", "")
     if otras:
         amenidades.extend([a.strip() for a in otras.split(",") if a.strip()])
-    _render_amenities(pdf, amenidades, pdf.get_y() + 8)
+    _render_amenities(pdf, amenidades, pdf.get_y() + 8, lang)
 
     # Footer
     _render_footer(pdf, property_data, branding=branding)
 
     # Page 2: Gallery
     if len(photos) > 1:
-        _render_gallery_page(pdf, photos, property_data, grid_uniform=False, branding=branding)
+        _render_gallery_page(pdf, photos, property_data, grid_uniform=False, branding=branding, lang=lang)
 
 
 # ──────────────────────────────────────────────────────────
 # Variante B — Moderno
 # ──────────────────────────────────────────────────────────
 
-def _render_moderno(pdf, property_data: dict, photos: list, branding=None):
+def _render_moderno(pdf, property_data: dict, photos: list, branding=None, lang: str = "es"):
     """Render modern template: clean white, header bar, centered photo, card stats."""
     pdf.add_page()
 
@@ -548,7 +591,7 @@ def _render_moderno(pdf, property_data: dict, photos: list, branding=None):
     pdf.cell(180, 6, location, align="C")
 
     # ── Stats cards ──
-    stats = _extract_stats(property_data)
+    stats = _extract_stats(property_data, lang)
     if stats:
         stats_y = loc_y + 12
         num_stats = len(stats)
@@ -586,7 +629,7 @@ def _render_moderno(pdf, property_data: dict, photos: list, branding=None):
     pdf.set_text_color(*pdf.PRIMARY)
     pdf.set_font("Helvetica", "B", 11)
     pdf.set_xy(15, desc_y)
-    pdf.cell(180, 7, "Descripción", ln=True)
+    pdf.cell(180, 7, get_label("descripcion", lang), ln=True)
 
     # Accent left border
     pdf.set_fill_color(*pdf.ACCENT)
@@ -608,21 +651,21 @@ def _render_moderno(pdf, property_data: dict, photos: list, branding=None):
 
     current_y = pdf.get_y() + 6
     if current_y < 245:
-        _render_amenities(pdf, amenidades, current_y)
+        _render_amenities(pdf, amenidades, current_y, lang)
 
     # Footer
     _render_footer(pdf, property_data, branding=branding)
 
     # Page 2: Gallery (uniform grid)
     if len(photos) > 1:
-        _render_gallery_page(pdf, photos, property_data, grid_uniform=True, branding=branding)
+        _render_gallery_page(pdf, photos, property_data, grid_uniform=True, branding=branding, lang=lang)
 
 
 # ──────────────────────────────────────────────────────────
 # Public API
 # ──────────────────────────────────────────────────────────
 
-def generate_pdf(property_data: dict, photo_paths: list, output_path: str, color_overrides=None, template="clasico", branding=None) -> str:
+def generate_pdf(property_data: dict, photo_paths: list, output_path: str, color_overrides=None, template="clasico", branding=None, lang: str = "es") -> str:
     """Generate a professional PDF listing with selected template variant."""
     pdf = ListaProPDF()
 
@@ -641,9 +684,9 @@ def generate_pdf(property_data: dict, photo_paths: list, output_path: str, color
 
     # Route to template renderer
     if template == "moderno":
-        _render_moderno(pdf, property_data, photos, branding=branding)
+        _render_moderno(pdf, property_data, photos, branding=branding, lang=lang)
     else:
-        _render_clasico(pdf, property_data, photos, branding=branding)
+        _render_clasico(pdf, property_data, photos, branding=branding, lang=lang)
 
     pdf.output(output_path)
     return output_path

@@ -7,9 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=6">
+    <link rel="stylesheet" href="/static/style.css?v=17">
 </head>
-<body>
+<body class="wizard-immersive">
     <header class="header">
         <div class="header-inner">
             <div class="header-logo">
@@ -22,58 +22,46 @@
         </div>
     </header>
 
-    <!-- Hero Banner -->
-    <div class="hero-banner">
-        <div class="hero-content">
-            <h2>Genera Listados Inmobiliarios Profesionales</h2>
-            <p>PDF listo para imprimir, Video Reel con música IA, copy para Instagram y mensaje de WhatsApp — todo generado automáticamente.</p>
-            <div class="gold-line"></div>
-        </div>
-    </div>
-
     <main class="container">
         {% if error %}
         <div class="error-box">{{ error }}</div>
         {% endif %}
 
-        <form action="/generar" method="post" enctype="multipart/form-data" id="listingForm">
+        <form action="/generar" method="post" enctype="multipart/form-data" id="listingForm" novalidate>
+            <input type="hidden" name="scenes_data" id="scenesDataHidden" value="">
 
-            <!-- Wizard Progress Bar -->
-            <div class="wizard-progress">
+            <!-- Minimal top progress bar -->
+            <div class="wizard-topbar">
+                <div class="wizard-topbar-inner">
+                    <span class="wizard-topbar-step" id="wizardStepLabel">1 / 6</span>
+                    <span class="wizard-topbar-title" id="wizardStepTitle">Propiedad</span>
+                    <div class="wizard-topbar-progress">
+                        <div class="wizard-topbar-fill" id="wizardProgressLine"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden: original indicators for JS compatibility -->
+            <div class="wizard-progress" style="display:none;">
                 <div class="wizard-steps-nav">
-                    <div class="wizard-progress-line" id="wizardProgressLine"></div>
-                    <div class="wizard-step-indicator active" data-step="1">
-                        <div class="wizard-step-circle">1</div>
-                        <span class="wizard-step-label">Propiedad</span>
-                    </div>
-                    <div class="wizard-step-indicator" data-step="2">
-                        <div class="wizard-step-circle">2</div>
-                        <span class="wizard-step-label">Detalles</span>
-                    </div>
-                    <div class="wizard-step-indicator" data-step="3">
-                        <div class="wizard-step-circle">3</div>
-                        <span class="wizard-step-label">Amenidades</span>
-                    </div>
-                    <div class="wizard-step-indicator" data-step="4">
-                        <div class="wizard-step-circle">4</div>
-                        <span class="wizard-step-label">Fotos</span>
-                    </div>
-                    <div class="wizard-step-indicator" data-step="5">
-                        <div class="wizard-step-circle">5</div>
-                        <span class="wizard-step-label">Agente</span>
-                    </div>
+                    <div class="wizard-step-indicator active" data-step="1"></div>
+                    <div class="wizard-step-indicator" data-step="2"></div>
+                    <div class="wizard-step-indicator" data-step="3"></div>
+                    <div class="wizard-step-indicator" data-step="4"></div>
+                    <div class="wizard-step-indicator" data-step="5"></div>
+                    <div class="wizard-step-indicator" data-step="6"></div>
+                    <div class="wizard-step-indicator" data-step="7"></div>
                 </div>
             </div>
 
             <!-- STEP 1: PROPIEDAD + UBICACIÓN -->
             <div class="wizard-step active" data-wizard-step="1">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-icon gold">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-                        </span>
-                        Datos de la Propiedad
-                    </h2>
+                    <div class="step-hero">
+                        <div class="step-number">Paso 01</div>
+                        <h2>Datos de la Propiedad</h2>
+                        <p class="step-subtitle">Tipo, ubicación y operación</p>
+                    </div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Tipo de propiedad <span class="required">*</span></label>
@@ -103,6 +91,13 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label>Idioma del contenido</label>
+                            <select name="idioma">
+                                <option value="es" selected>Español</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Ciudad / Zona <span class="required">*</span></label>
                             <input type="text" name="ciudad" placeholder="Ej: Polanco, CDMX" required>
                         </div>
@@ -113,19 +108,18 @@
                     </div>
                 </div>
                 <div class="wizard-nav end-only">
-                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente →</button>
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente &rarr;</button>
                 </div>
             </div>
 
             <!-- STEP 2: PRECIO + CARACTERÍSTICAS -->
             <div class="wizard-step" data-wizard-step="2">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-icon gold">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                        </span>
-                        Precio y Características
-                    </h2>
+                    <div class="step-hero">
+                        <div class="step-number">Paso 02</div>
+                        <h2>Precio y Características</h2>
+                        <p class="step-subtitle">Especificaciones y superficie</p>
+                    </div>
                     <div class="form-grid">
                         <div class="form-group full-width">
                             <label>Precio <span class="required">*</span></label>
@@ -161,20 +155,19 @@
                     </div>
                 </div>
                 <div class="wizard-nav">
-                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">← Anterior</button>
-                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente →</button>
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">&larr; Anterior</button>
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente &rarr;</button>
                 </div>
             </div>
 
             <!-- STEP 3: AMENIDADES + NOTAS -->
             <div class="wizard-step" data-wizard-step="3">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-icon gold">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                        </span>
-                        Amenidades
-                    </h2>
+                    <div class="step-hero">
+                        <div class="step-number">Paso 03</div>
+                        <h2>Amenidades</h2>
+                        <p class="step-subtitle">Selecciona las características de la propiedad</p>
+                    </div>
                     <div class="amenities-grid">
                         {% for amenity in amenities %}
                         <label class="amenity-item">
@@ -194,20 +187,173 @@
                     </div>
                 </div>
                 <div class="wizard-nav">
-                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">← Anterior</button>
-                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente →</button>
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">&larr; Anterior</button>
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente &rarr;</button>
                 </div>
             </div>
 
-            <!-- STEP 4: FOTOS -->
+            <!-- STEP 4: VIDEO & VOICEOVER (moved before photos) -->
             <div class="wizard-step" data-wizard-step="4">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-icon gold">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
-                        </span>
-                        Fotos de la Propiedad
-                    </h2>
+                    <div class="step-hero">
+                        <div class="step-number">Paso 04</div>
+                        <h2>Video y Voiceover</h2>
+                        <p class="step-subtitle">Configura tu video con IA</p>
+                    </div>
+
+                    <!-- Video Type -->
+                    <div class="form-group full-width">
+                        <label>Tipo de video</label>
+                        <div class="vo-toggle-group" id="videoTypeGroup">
+                            <label class="vo-toggle-btn active" data-value="reel">
+                                <input type="radio" name="video_type" value="reel" checked>
+                                <span class="vo-toggle-icon">&#9889;</span>
+                                <span class="vo-toggle-label">Reel Rápido</span>
+                                <span class="vo-toggle-desc">15-25 seg &middot; showcase rápido</span>
+                            </label>
+                            <label class="vo-toggle-btn" data-value="tour">
+                                <input type="radio" name="video_type" value="tour">
+                                <span class="vo-toggle-icon">&#127968;</span>
+                                <span class="vo-toggle-label">Tour Narrado</span>
+                                <span class="vo-toggle-desc">45-60 seg &middot; recorrido detallado</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Voiceover Toggle -->
+                    <div class="vo-section-divider"></div>
+                    <div class="form-group full-width">
+                        <label class="vo-switch-label">
+                            <span>¿Agregar voiceover al video?</span>
+                            <label class="vo-switch">
+                                <input type="checkbox" name="generar_voiceover" value="1" id="voiceoverToggle">
+                                <span class="vo-switch-slider"></span>
+                            </label>
+                        </label>
+                    </div>
+
+                    <!-- Voiceover Options (hidden until toggle is ON) -->
+                    <div class="vo-options" id="voiceoverOptions" style="display:none;">
+                        <!-- Voice Selection -->
+                        <div class="form-group full-width">
+                            <label>Voz</label>
+                            <div class="vo-toggle-group">
+                                <label class="vo-toggle-btn active" data-value="femenina">
+                                    <input type="radio" name="vo_voice" value="femenina" checked>
+                                    <span class="vo-toggle-icon">&#128105;</span>
+                                    <span class="vo-toggle-label">Femenina</span>
+                                </label>
+                                <label class="vo-toggle-btn" data-value="masculina">
+                                    <input type="radio" name="vo_voice" value="masculina">
+                                    <span class="vo-toggle-icon">&#128104;</span>
+                                    <span class="vo-toggle-label">Masculina</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Tone Selection -->
+                        <div class="form-group full-width">
+                            <label>Tono</label>
+                            <div class="vo-toggle-group vo-toggle-group-3">
+                                <label class="vo-toggle-btn active" data-value="profesional">
+                                    <input type="radio" name="vo_tone" value="profesional" checked>
+                                    <span class="vo-toggle-icon">&#128188;</span>
+                                    <span class="vo-toggle-label">Profesional</span>
+                                </label>
+                                <label class="vo-toggle-btn" data-value="lujo">
+                                    <input type="radio" name="vo_tone" value="lujo">
+                                    <span class="vo-toggle-icon">&#10024;</span>
+                                    <span class="vo-toggle-label">Lujo</span>
+                                </label>
+                                <label class="vo-toggle-btn" data-value="energetico">
+                                    <input type="radio" name="vo_tone" value="energetico">
+                                    <span class="vo-toggle-icon">&#128293;</span>
+                                    <span class="vo-toggle-label">Energético</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Additional Context -->
+                        <div class="form-group full-width">
+                            <label>Contexto adicional <span style="color: var(--text-muted); font-weight: 400;">(opcional)</span></label>
+                            <textarea name="vo_context" placeholder="Ej: Mencionar que es esquina, enfatizar la vista al mar, destacar que está cerca de escuelas..." rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wizard-nav">
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">&larr; Anterior</button>
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente &rarr;</button>
+                </div>
+            </div>
+
+            <!-- STEP 5: SCENE REVIEW (only visible when voiceover ON) -->
+            <div class="wizard-step" data-wizard-step="5" id="scenesStep">
+                <div class="form-section">
+                    <div class="step-hero">
+                        <div class="step-number">Guión</div>
+                        <h2>Revisa tu Guión por Escenas</h2>
+                        <p class="step-subtitle">Edita el texto y sube la foto de cada escena. Las fotos se sincronizarán con la narración del video.</p>
+                    </div>
+
+                    <!-- Loading state while generating -->
+                    <div id="scenesLoading" style="text-align:center;padding:3rem 0;">
+                        <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:#c9a84c;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
+                        <p style="color:rgba(255,255,255,0.5);margin-top:1rem;font-size:0.95rem;">Generando guión con IA...</p>
+                        <p style="color:rgba(255,255,255,0.3);font-size:0.8rem;">Esto toma unos segundos</p>
+                    </div>
+
+                    <!-- Error state -->
+                    <div id="scenesError" style="display:none;text-align:center;padding:2rem 0;">
+                        <p style="color:#e74c3c;margin-bottom:1rem;">No se pudo generar el guión. Puedes reintentar o continuar sin voiceover.</p>
+                        <button type="button" onclick="retryScriptGeneration()" style="padding:0.6rem 1.5rem;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);border-radius:8px;color:#c9a84c;cursor:pointer;font-family:'DM Sans',sans-serif;margin-right:0.5rem;">Reintentar</button>
+                        <button type="button" onclick="skipVoiceover()" style="padding:0.6rem 1.5rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.5);cursor:pointer;font-family:'DM Sans',sans-serif;">Continuar sin voiceover</button>
+                    </div>
+
+                    <!-- Scene list (populated via JS) -->
+                    <div id="scenesList" style="display:none;"></div>
+
+                    <!-- Totals bar -->
+                    <div id="scenesTotals" style="display:none;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:1.5rem;font-size:0.82rem;color:rgba(255,255,255,0.5);flex-wrap:wrap;gap:0.5rem;">
+                        <span><strong style="color:#c9a84c;" id="sTotalWords">0</strong> palabras</span>
+                        <span>~<strong style="color:#c9a84c;"><span id="sTotalDuration">0</span>s</strong></span>
+                        <span>Fotos: <strong style="color:#c9a84c;"><span id="sPhotoCount">0</span>/<span id="sSceneCount">0</span></strong></span>
+                    </div>
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">&larr; Anterior</button>
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente &rarr;</button>
+                </div>
+            </div>
+
+            <!-- STEP 6: FOTOS (adapts based on video type) -->
+            <div class="wizard-step" data-wizard-step="6">
+                <div class="form-section">
+                    <div class="step-hero">
+                        <div class="step-number">Paso 05</div>
+                        <h2>Fotos de la Propiedad</h2>
+                        <!-- Dynamic subtitle updates when scene photos exist -->
+                        <p class="step-subtitle scene-photos-hint" id="scenePhotosHint" style="display:none;color:#c9a84c;font-size:0.85rem;margin-top:0.3rem;">Las fotos de las escenas ya se incluyeron. Puedes agregar más o modificarlas aquí.</p>
+                        <p class="step-subtitle">Imágenes para PDF, video e Instagram</p>
+                    </div>
+
+                    <!-- Adaptive guidance based on video type -->
+                    <div class="photo-guidance" id="photoGuidance">
+                        <div class="photo-guidance-reel" id="guidanceReel">
+                            <div class="photo-guidance-icon">&#9889;</div>
+                            <div>
+                                <strong>Reel Rápido</strong> &mdash; Sube al menos 1 foto de portada. Las fotos extra se usan en el PDF, carrusel e Instagram.
+                            </div>
+                        </div>
+                        <div class="photo-guidance-tour" id="guidanceTour" style="display:none;">
+                            <div class="photo-guidance-icon">&#127968;</div>
+                            <div>
+                                <strong>Tour Narrado</strong> &mdash; Sube <strong>al menos 5 fotos</strong> para un recorrido completo. Ordénalas en la secuencia del recorrido: exterior &rarr; entrada &rarr; sala &rarr; cocina &rarr; recámaras &rarr; baños &rarr; áreas exteriores.
+                                <span class="photo-guidance-hint">Arrastra las fotos para reordenar. El orden define la secuencia del video.</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="photo-sections">
                         <!-- Cover Photo -->
                         <div class="photo-section-cover">
@@ -228,7 +374,7 @@
 
                         <!-- Extra Photos -->
                         <div class="photo-section-extras">
-                            <p class="photo-section-subtitle">Fotos adicionales para la galería (máx. 9)</p>
+                            <p class="photo-section-subtitle" id="extrasSubtitle">Fotos adicionales para la galería (máx. 9) &mdash; arrastra para reordenar</p>
                             <div class="photo-upload-area" id="extrasUploadArea">
                                 <input type="file" name="fotos_extra" id="extrasFileInput" multiple accept="image/*">
                                 <div class="photo-upload-icon">
@@ -239,25 +385,44 @@
                                     Haz clic o arrastra
                                 </p>
                             </div>
+                            <!-- Photo count warning for tour mode -->
+                            <div class="photo-count-warning" id="photoCountWarning" style="display:none;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                <span id="photoCountText">Necesitas al menos 4 fotos extras para un tour completo</span>
+                            </div>
                             <div class="photo-previews" id="extrasPreviews"></div>
+                        </div>
+
+                        <!-- Additional format checkboxes -->
+                        <div class="additional-formats-section">
+                            <p class="photo-section-subtitle">Formatos adicionales (opcional)</p>
+                            <label class="amenity-item">
+                                <input type="checkbox" name="generar_story" value="1">
+                                <span class="amenity-check"></span>
+                                Instagram Story (1080x1920)
+                            </label>
+                            <label class="amenity-item">
+                                <input type="checkbox" name="generar_carousel" value="1">
+                                <span class="amenity-check"></span>
+                                Carrusel Instagram (5-7 slides)
+                            </label>
                         </div>
                     </div>
                 </div>
                 <div class="wizard-nav">
-                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">← Anterior</button>
-                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente →</button>
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">&larr; Anterior</button>
+                    <button type="button" class="btn-wizard-next" onclick="wizardNext()">Siguiente &rarr;</button>
                 </div>
             </div>
 
-            <!-- STEP 5: AGENTE + SUBMIT -->
-            <div class="wizard-step" data-wizard-step="5">
+            <!-- STEP 7: AGENTE + SUBMIT -->
+            <div class="wizard-step" data-wizard-step="7">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-icon gold">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        </span>
-                        Contacto del Agente
-                    </h2>
+                    <div class="step-hero">
+                        <div class="step-number">Paso 06</div>
+                        <h2>Contacto del Agente</h2>
+                        <p class="step-subtitle">Datos de contacto para el listado</p>
+                    </div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Nombre del agente <span class="required">*</span></label>
@@ -279,7 +444,7 @@
                 </div>
 
                 <div class="wizard-nav">
-                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">← Anterior</button>
+                    <button type="button" class="btn-wizard-back" onclick="wizardBack()">&larr; Anterior</button>
                     <button type="submit" class="btn-submit" id="submitBtn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                         Generar Listado Profesional
@@ -290,40 +455,188 @@
         </form>
     </main>
 
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+        <div class="loading-content">
+            <div class="loading-logo">Lista<span>Pro</span></div>
+            <div class="loading-animation">
+                <div class="loading-house">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="#c9a84c"/>
+                        <polyline points="9 22 9 12 15 12 15 22" stroke="#c9a84c"/>
+                    </svg>
+                </div>
+                <div class="loading-pulse-ring"></div>
+            </div>
+            <div class="loading-status" id="loadingStatus">Preparando tu listado...</div>
+            <div class="loading-steps">
+                <div class="loading-step" id="step-ai" data-step="1">
+                    <div class="loading-step-icon">✍️</div>
+                    <div class="loading-step-text">Generando textos con IA</div>
+                    <div class="loading-step-check">✓</div>
+                </div>
+                <div class="loading-step" id="step-pdf" data-step="2">
+                    <div class="loading-step-icon">📄</div>
+                    <div class="loading-step-text">Creando PDF profesional</div>
+                    <div class="loading-step-check">✓</div>
+                </div>
+                <div class="loading-step" id="step-ig" data-step="3">
+                    <div class="loading-step-icon">📸</div>
+                    <div class="loading-step-text">Diseñando publicaciones Instagram</div>
+                    <div class="loading-step-check">✓</div>
+                </div>
+                <div class="loading-step" id="step-email" data-step="4">
+                    <div class="loading-step-icon">📧</div>
+                    <div class="loading-step-text">Generando email marketing</div>
+                    <div class="loading-step-check">✓</div>
+                </div>
+                <div class="loading-step" id="step-done" data-step="5">
+                    <div class="loading-step-icon">🚀</div>
+                    <div class="loading-step-text">¡Listo! Redirigiendo...</div>
+                    <div class="loading-step-check">✓</div>
+                </div>
+            </div>
+            <p class="loading-hint">El video se genera en segundo plano después de mostrar resultados</p>
+        </div>
+    </div>
+
     <footer class="footer">
         <span>ListaPro</span> — Automatización inteligente para inmobiliarias
     </footer>
+
+    <style>
+        /* Scene review step styles */
+        .scene-card {
+            background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+            border-radius:14px; overflow:hidden; margin-bottom:1rem;
+            transition:border-color 0.3s;
+        }
+        .scene-card:focus-within { border-color:rgba(201,168,76,0.3); }
+        .scene-card-header {
+            display:flex; align-items:center; gap:0.75rem;
+            padding:0.75rem 1rem; background:rgba(255,255,255,0.02);
+            border-bottom:1px solid rgba(255,255,255,0.06);
+        }
+        .scene-emoji { font-size:1.4rem; }
+        .scene-label { font-weight:600; color:#fff; font-size:0.9rem; flex:1; }
+        .scene-number { font-size:0.7rem; color:rgba(255,255,255,0.35); font-weight:500; text-transform:uppercase; letter-spacing:1px; }
+        .scene-body { display:flex; gap:1rem; padding:1rem; }
+        .scene-text-col { flex:1; min-width:0; }
+        .scene-textarea {
+            width:100%; padding:0.75rem; background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.08); border-radius:10px;
+            color:#fff; font-family:'DM Sans',sans-serif; font-size:0.9rem;
+            line-height:1.6; resize:vertical; outline:none;
+            transition:border-color 0.3s; min-height:70px; box-sizing:border-box;
+        }
+        .scene-textarea:focus { border-color:rgba(201,168,76,0.4); }
+        .scene-word-count { text-align:right; font-size:0.75rem; color:rgba(255,255,255,0.3); margin-top:0.3rem; }
+        .scene-photo-col {
+            flex:0 0 140px; display:flex; flex-direction:column;
+            align-items:center; gap:0.5rem;
+        }
+        .scene-photo-upload {
+            width:130px; height:100px; border-radius:10px; overflow:hidden;
+            background:rgba(255,255,255,0.05); border:2px dashed rgba(255,255,255,0.15);
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; transition:border-color 0.3s; position:relative;
+        }
+        .scene-photo-upload:hover { border-color:rgba(201,168,76,0.4); }
+        .scene-photo-upload.has-photo { border-style:solid; border-color:rgba(201,168,76,0.3); }
+        .scene-photo-upload img { width:100%; height:100%; object-fit:cover; display:block; }
+        .scene-photo-placeholder {
+            color:rgba(255,255,255,0.25); font-size:0.7rem; text-align:center; padding:0.3rem;
+        }
+        .scene-photo-placeholder svg { display:block; margin:0 auto 4px; }
+        .scene-photo-remove {
+            position:absolute; top:4px; right:4px; width:22px; height:22px;
+            background:rgba(0,0,0,0.6); border:none; border-radius:50%;
+            color:#fff; font-size:12px; cursor:pointer; display:none;
+            align-items:center; justify-content:center; line-height:1;
+        }
+        .scene-photo-upload.has-photo .scene-photo-remove { display:flex; }
+        @media (max-width: 600px) {
+            .scene-body { flex-direction: column; }
+            .scene-photo-col { flex: 0 0 auto; flex-direction: row; gap: 0.75rem; }
+            .scene-photo-upload { width: 90px; height: 70px; }
+        }
+    </style>
 
     <script>
         // ============================================
         // WIZARD CONTROLLER
         // ============================================
         let currentStep = 1;
-        const totalSteps = 5;
+        const DOM_STEPS = 7; // total steps in DOM
+        const ALL_STEP_NAMES = ['Propiedad', 'Detalles', 'Amenidades', 'Video', 'Guión', 'Fotos', 'Agente'];
+
+        // Active steps array — step 5 (scenes) is included only when voiceover is ON
+        let activeSteps = [1, 2, 3, 4, 6, 7]; // default: no voiceover (skip step 5)
+        let scenesGenerated = false;
+        let scenesData = []; // current scenes from API
+        let scenePhotos = []; // File objects per scene index
+
+        function isVoiceoverOn() {
+            return document.getElementById('voiceoverToggle')?.checked || false;
+        }
+
+        function updateActiveSteps() {
+            if (isVoiceoverOn()) {
+                activeSteps = [1, 2, 3, 4, 5, 6, 7];
+            } else {
+                activeSteps = [1, 2, 3, 4, 6, 7];
+                scenesGenerated = false;
+                scenesData = [];
+                scenePhotos = [];
+            }
+            updateStepIndicators();
+        }
+
+        function updateStepIndicators() {
+            const visibleCount = activeSteps.length;
+            document.querySelectorAll('.wizard-step-indicator').forEach(ind => {
+                const indStep = parseInt(ind.dataset.step);
+                ind.style.display = indStep <= visibleCount ? '' : 'none';
+            });
+            // Update topbar
+            const posInActive = activeSteps.indexOf(currentStep);
+            const pos = posInActive >= 0 ? posInActive + 1 : 1;
+            document.getElementById('wizardStepLabel').textContent = `${pos} / ${visibleCount}`;
+            document.getElementById('wizardStepTitle').textContent = ALL_STEP_NAMES[currentStep - 1];
+            const line = document.getElementById('wizardProgressLine');
+            line.style.width = `${((pos - 1) / (visibleCount - 1)) * 100}%`;
+
+            // Update indicator dots
+            document.querySelectorAll('.wizard-step-indicator').forEach((ind, visualIdx) => {
+                ind.classList.remove('active', 'completed');
+                if (visualIdx + 1 === pos) ind.classList.add('active');
+                else if (visualIdx + 1 < pos) ind.classList.add('completed');
+            });
+        }
 
         function showStep(step) {
             document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
             const target = document.querySelector(`.wizard-step[data-wizard-step="${step}"]`);
             if (target) target.classList.add('active');
 
-            document.querySelectorAll('.wizard-step-indicator').forEach(ind => {
-                const indStep = parseInt(ind.dataset.step);
-                ind.classList.remove('active', 'completed');
-                if (indStep === step) ind.classList.add('active');
-                else if (indStep < step) ind.classList.add('completed');
-            });
-
-            // Update progress line width
-            const line = document.getElementById('wizardProgressLine');
-            const pct = ((step - 1) / (totalSteps - 1)) * 100;
-            line.style.width = `calc(${pct}% - ${pct > 0 ? 0 : 20}px)`;
-
-            document.querySelector('.wizard-progress').scrollIntoView({ behavior: 'smooth', block: 'start' });
             currentStep = step;
+            updateStepIndicators();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // When entering photos step, update guidance
+            if (step === 6) {
+                updatePhotoGuidance();
+            }
+
+            // When entering scenes step, trigger script generation
+            if (step === 5 && !scenesGenerated) {
+                generateScriptForWizard();
+            }
         }
 
         function validateStep(step) {
             const stepEl = document.querySelector(`.wizard-step[data-wizard-step="${step}"]`);
+            if (!stepEl) return true;
             const requiredFields = stepEl.querySelectorAll('[required]');
             let valid = true;
             requiredFields.forEach(field => {
@@ -338,19 +651,38 @@
                 const hint = stepEl.querySelector('.validation-hint');
                 if (hint) hint.classList.add('show');
             }
+
+            // Tour mode: warn if not enough photos (step 6 = photos)
+            if (step === 6 && getVideoType() === 'tour') {
+                const totalPhotos = (coverFile ? 1 : 0) + extrasArray.length;
+                if (totalPhotos < 5) {
+                    const warning = document.getElementById('photoCountWarning');
+                    warning.style.display = 'flex';
+                    document.getElementById('photoCountText').textContent =
+                        `Tienes ${totalPhotos} foto${totalPhotos !== 1 ? 's' : ''}. Se recomiendan al menos 5 para un tour completo.`;
+                }
+            }
+
             return valid;
         }
 
         function wizardNext() {
             if (!validateStep(currentStep)) return;
-            if (currentStep < totalSteps) {
-                showStep(currentStep + 1);
+            const idx = activeSteps.indexOf(currentStep);
+            if (idx < activeSteps.length - 1) {
+                const nextStep = activeSteps[idx + 1];
+                // When leaving scenes step → transfer photos to photo step
+                if (currentStep === 5 && nextStep === 6) {
+                    transferScenePhotosToPhotoStep();
+                }
+                showStep(nextStep);
             }
         }
 
         function wizardBack() {
-            if (currentStep > 1) {
-                showStep(currentStep - 1);
+            const idx = activeSteps.indexOf(currentStep);
+            if (idx > 0) {
+                showStep(activeSteps[idx - 1]);
             }
         }
 
@@ -360,8 +692,59 @@
         });
 
         // ============================================
+        // VIDEO TYPE → PHOTO GUIDANCE
+        // ============================================
+        function getVideoType() {
+            const checked = document.querySelector('input[name="video_type"]:checked');
+            return checked ? checked.value : 'reel';
+        }
+
+        function updatePhotoGuidance() {
+            const isTour = getVideoType() === 'tour';
+            document.getElementById('guidanceReel').style.display = isTour ? 'none' : 'flex';
+            document.getElementById('guidanceTour').style.display = isTour ? 'flex' : 'none';
+
+            // Update extras subtitle
+            const subtitle = document.getElementById('extrasSubtitle');
+            if (isTour) {
+                subtitle.textContent = 'Fotos del recorrido (mín. 4, máx. 9) \u2014 ordénalas en la secuencia del tour';
+            } else {
+                subtitle.innerHTML = 'Fotos adicionales para la galería (máx. 9) &mdash; arrastra para reordenar';
+            }
+
+            // Update photo count warning
+            updatePhotoCountWarning();
+        }
+
+        function updatePhotoCountWarning() {
+            const isTour = getVideoType() === 'tour';
+            const warning = document.getElementById('photoCountWarning');
+            if (!isTour) {
+                warning.style.display = 'none';
+                return;
+            }
+            const totalPhotos = (coverFile ? 1 : 0) + extrasArray.length;
+            if (totalPhotos < 5) {
+                warning.style.display = 'flex';
+                const needed = 5 - totalPhotos;
+                document.getElementById('photoCountText').textContent =
+                    `Necesitas ${needed} foto${needed !== 1 ? 's' : ''} más para un tour completo (tienes ${totalPhotos} de 5 mínimo)`;
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+
+        // Listen for video type changes (in step 4)
+        document.querySelectorAll('input[name="video_type"]').forEach(radio => {
+            radio.addEventListener('change', updatePhotoGuidance);
+        });
+
+        // ============================================
         // CURRENCY BADGE UPDATE
         // ============================================
+        // Initialize step indicators on page load
+        updateActiveSteps();
+
         const countrySelect = document.getElementById('countrySelect');
         const currencyBadge = document.getElementById('currencyBadge');
         countrySelect.addEventListener('change', function() {
@@ -370,55 +753,85 @@
         });
 
         // ============================================
-        // COVER PHOTO (single file)
+        // COVER PHOTO (single file + rotation)
         // ============================================
         const coverInput = document.getElementById('coverFileInput');
         const coverPreview = document.getElementById('coverPreview');
         const coverUploadArea = document.getElementById('coverUploadArea');
+        let coverFile = null;
+        let coverRotation = 0;
 
         coverInput.addEventListener('change', function() {
             if (this.files.length > 0) {
-                showCoverPreview(this.files[0]);
+                coverFile = this.files[0];
+                coverRotation = 0;
+                showCoverPreview();
+                updatePhotoCountWarning();
             }
         });
 
-        function showCoverPreview(file) {
-            if (!file.type.startsWith('image/')) return;
+        function showCoverPreview() {
+            if (!coverFile || !coverFile.type.startsWith('image/')) return;
             coverPreview.innerHTML = '';
             const div = document.createElement('div');
             div.className = 'photo-preview cover-photo-preview';
             const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
+            img.src = URL.createObjectURL(coverFile);
             img.onload = () => URL.revokeObjectURL(img.src);
+            img.style.transform = `rotate(${coverRotation}deg)`;
+            img.style.transition = 'transform 0.3s ease';
+
+            // Rotate button
+            const rotBtn = document.createElement('button');
+            rotBtn.type = 'button';
+            rotBtn.className = 'photo-rotate-btn';
+            rotBtn.innerHTML = '&#8635;';
+            rotBtn.title = 'Rotar 90°';
+            rotBtn.onclick = (e) => {
+                e.stopPropagation();
+                coverRotation = (coverRotation + 90) % 360;
+                img.style.transform = `rotate(${coverRotation}deg)`;
+            };
+
+            // Remove button
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'remove-btn';
             removeBtn.textContent = '\u2715';
             removeBtn.onclick = () => {
                 coverPreview.innerHTML = '';
+                coverFile = null;
+                coverRotation = 0;
                 coverInput.value = '';
                 coverUploadArea.style.display = '';
+                updatePhotoCountWarning();
             };
+
             div.appendChild(img);
+            div.appendChild(rotBtn);
             div.appendChild(removeBtn);
             coverPreview.appendChild(div);
             coverUploadArea.style.display = 'none';
         }
 
         // ============================================
-        // EXTRA PHOTOS (multiple files)
+        // EXTRA PHOTOS (array-based + drag reorder + rotation)
         // ============================================
         const extrasInput = document.getElementById('extrasFileInput');
         const extrasPreviews = document.getElementById('extrasPreviews');
         const extrasUploadArea = document.getElementById('extrasUploadArea');
-        let extrasFiles = new DataTransfer();
+        let extrasArray = []; // [{file: File, rotation: 0}, ...]
+        let dragFromIndex = -1;
 
         extrasInput.addEventListener('change', function() {
             addExtras(this.files);
+            this.value = '';
         });
 
+        // Drop-to-add on upload area
         extrasUploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
+            if (dragFromIndex >= 0) return;
             extrasUploadArea.classList.add('dragover');
         });
         extrasUploadArea.addEventListener('dragleave', () => {
@@ -427,58 +840,601 @@
         extrasUploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             extrasUploadArea.classList.remove('dragover');
+            if (dragFromIndex >= 0) return;
             if (e.dataTransfer.files.length) addExtras(e.dataTransfer.files);
         });
 
         function addExtras(files) {
             const maxFiles = 9;
             for (let file of files) {
-                if (extrasFiles.files.length >= maxFiles) break;
+                if (extrasArray.length >= maxFiles) break;
                 if (!file.type.startsWith('image/')) continue;
-                extrasFiles.items.add(file);
+                extrasArray.push({ file, rotation: 0 });
             }
-            extrasInput.files = extrasFiles.files;
             renderExtras();
+            updatePhotoCountWarning();
         }
 
         function renderExtras() {
             extrasPreviews.innerHTML = '';
-            for (let i = 0; i < extrasFiles.files.length; i++) {
-                const file = extrasFiles.files[i];
+            extrasArray.forEach((item, i) => {
                 const div = document.createElement('div');
                 div.className = 'photo-preview';
+                div.draggable = true;
+                div.dataset.index = i;
+
+                // Order badge
+                const badge = document.createElement('span');
+                badge.className = 'photo-order-badge';
+                badge.textContent = i + 1;
+
+                // Image
                 const img = document.createElement('img');
-                img.src = URL.createObjectURL(file);
+                img.src = URL.createObjectURL(item.file);
                 img.onload = () => URL.revokeObjectURL(img.src);
+                img.style.transform = `rotate(${item.rotation}deg)`;
+                img.style.transition = 'transform 0.3s ease';
+
+                // Rotate button
+                const rotBtn = document.createElement('button');
+                rotBtn.type = 'button';
+                rotBtn.className = 'photo-rotate-btn';
+                rotBtn.innerHTML = '&#8635;';
+                rotBtn.title = 'Rotar 90°';
+                rotBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    item.rotation = (item.rotation + 90) % 360;
+                    img.style.transform = `rotate(${item.rotation}deg)`;
+                };
+
+                // Remove button
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
                 removeBtn.className = 'remove-btn';
                 removeBtn.textContent = '\u2715';
-                removeBtn.onclick = () => removeExtra(i);
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    extrasArray.splice(i, 1);
+                    renderExtras();
+                    updatePhotoCountWarning();
+                };
+
+                // Drag events for reorder
+                div.addEventListener('dragstart', (e) => {
+                    dragFromIndex = i;
+                    div.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', i);
+                });
+                div.addEventListener('dragend', () => {
+                    dragFromIndex = -1;
+                    div.classList.remove('dragging');
+                    document.querySelectorAll('.photo-preview.drag-over').forEach(el => el.classList.remove('drag-over'));
+                });
+                div.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (dragFromIndex < 0 || dragFromIndex === i) return;
+                    e.dataTransfer.dropEffect = 'move';
+                    div.classList.add('drag-over');
+                });
+                div.addEventListener('dragleave', () => {
+                    div.classList.remove('drag-over');
+                });
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    div.classList.remove('drag-over');
+                    if (dragFromIndex < 0 || dragFromIndex === i) return;
+                    const [moved] = extrasArray.splice(dragFromIndex, 1);
+                    extrasArray.splice(i, 0, moved);
+                    dragFromIndex = -1;
+                    renderExtras();
+                });
+
+                // Touch reorder (long-press to drag)
+                let touchTimer = null;
+                let touchDragging = false;
+                div.addEventListener('touchstart', (e) => {
+                    touchTimer = setTimeout(() => {
+                        touchDragging = true;
+                        div.classList.add('dragging');
+                    }, 400);
+                }, { passive: true });
+                div.addEventListener('touchend', (e) => {
+                    clearTimeout(touchTimer);
+                    if (touchDragging) {
+                        touchDragging = false;
+                        div.classList.remove('dragging');
+                        const touch = e.changedTouches[0];
+                        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                        const targetPreview = target?.closest('.photo-preview[data-index]');
+                        if (targetPreview) {
+                            const targetIdx = parseInt(targetPreview.dataset.index);
+                            if (targetIdx !== i) {
+                                const [moved] = extrasArray.splice(i, 1);
+                                extrasArray.splice(targetIdx, 0, moved);
+                                renderExtras();
+                            }
+                        }
+                    }
+                });
+                div.addEventListener('touchmove', () => {
+                    clearTimeout(touchTimer);
+                }, { passive: true });
+
+                div.appendChild(badge);
                 div.appendChild(img);
+                div.appendChild(rotBtn);
                 div.appendChild(removeBtn);
                 extrasPreviews.appendChild(div);
-            }
-        }
-
-        function removeExtra(index) {
-            const newDT = new DataTransfer();
-            for (let i = 0; i < extrasFiles.files.length; i++) {
-                if (i !== index) newDT.items.add(extrasFiles.files[i]);
-            }
-            extrasFiles = newDT;
-            extrasInput.files = extrasFiles.files;
-            renderExtras();
+            });
         }
 
         // ============================================
-        // FORM SUBMIT LOADING STATE
+        // CANVAS ROTATION + FORM SUBMIT
+        // ============================================
+        function rotateImageFile(file, degrees) {
+            return new Promise((resolve) => {
+                if (degrees === 0) { resolve(file); return; }
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const rad = (degrees * Math.PI) / 180;
+                    if (degrees === 90 || degrees === 270) {
+                        canvas.width = img.height;
+                        canvas.height = img.width;
+                    } else {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.rotate(rad);
+                    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+                    canvas.toBlob((blob) => {
+                        const rotatedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        resolve(rotatedFile);
+                    }, 'image/jpeg', 0.92);
+                };
+                img.src = url;
+            });
+        }
+
+        // ============================================
+        // VOICEOVER TOGGLE + BUTTON GROUPS
+        // ============================================
+        const voiceoverToggle = document.getElementById('voiceoverToggle');
+        const voiceoverOptions = document.getElementById('voiceoverOptions');
+
+        voiceoverToggle.addEventListener('change', function() {
+            voiceoverOptions.style.display = this.checked ? '' : 'none';
+            updateActiveSteps();
+        });
+
+        // Toggle button groups (radio-style selection)
+        document.querySelectorAll('.vo-toggle-group').forEach(group => {
+            group.querySelectorAll('.vo-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    group.querySelectorAll('.vo-toggle-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = true;
+                });
+            });
+        });
+
+        // ============================================
+        // SCENE REVIEW: AJAX GENERATION + RENDERING
+        // ============================================
+        function getPropertyDataFromForm() {
+            const fd = new FormData(document.getElementById('listingForm'));
+            return {
+                tipo_propiedad: fd.get('tipo_propiedad') || '',
+                operacion: fd.get('operacion') || '',
+                pais: fd.get('pais') || '',
+                ciudad: fd.get('ciudad') || '',
+                direccion: fd.get('direccion') || '',
+                precio: parseFloat(fd.get('precio')) || 0,
+                recamaras: fd.get('recamaras') || '0',
+                banos: fd.get('banos') || '0',
+                m2_construidos: fd.get('m2_construidos') || '',
+                m2_terreno: fd.get('m2_terreno') || '',
+                estacionamientos: fd.get('estacionamientos') || '0',
+                pisos: fd.get('pisos') || '1',
+                amenidades: fd.getAll('amenidades'),
+                otras_amenidades: fd.get('otras_amenidades') || '',
+                notas: fd.get('notas') || '',
+                agente_nombre: fd.get('agente_nombre') || '',
+                agente_telefono: fd.get('agente_telefono') || '',
+            };
+        }
+
+        async function generateScriptForWizard() {
+            const loading = document.getElementById('scenesLoading');
+            const error = document.getElementById('scenesError');
+            const list = document.getElementById('scenesList');
+            const totals = document.getElementById('scenesTotals');
+
+            loading.style.display = '';
+            error.style.display = 'none';
+            list.style.display = 'none';
+            totals.style.display = 'none';
+
+            const fd = new FormData(document.getElementById('listingForm'));
+            const body = {
+                property_data: getPropertyDataFromForm(),
+                video_type: fd.get('video_type') || 'tour',
+                vo_tone: fd.get('vo_tone') || 'profesional',
+                vo_context: fd.get('vo_context') || '',
+                idioma: fd.get('idioma') || 'es',
+            };
+
+            try {
+                const resp = await fetch('/api/voiceover/generate-script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await resp.json();
+
+                if (data.scenes && data.scenes.length > 0) {
+                    scenesData = data.scenes;
+                    scenePhotos = new Array(scenesData.length).fill(null);
+                    renderSceneCards(scenesData);
+                    scenesGenerated = true;
+                    loading.style.display = 'none';
+                    list.style.display = '';
+                    totals.style.display = 'flex';
+                    updateSceneTotals();
+                } else if (data.script) {
+                    // Flat script fallback — split into ~3 scenes by sentences
+                    const fullText = data.script.trim();
+                    const sentences = fullText.match(/[^.!?]+[.!?]+/g) || [fullText];
+                    const chunkSize = Math.max(1, Math.ceil(sentences.length / 3));
+                    const fbLabels = [
+                        { id: 'exterior', label: 'Fachada', emoji: '🏠' },
+                        { id: 'interior', label: 'Interior', emoji: '🏡' },
+                        { id: 'cierre',   label: 'Cierre',   emoji: '📞' },
+                    ];
+                    scenesData = [];
+                    for (let c = 0; c < 3; c++) {
+                        const chunk = sentences.slice(c * chunkSize, (c + 1) * chunkSize).join(' ').trim();
+                        if (chunk) {
+                            scenesData.push({ id: fbLabels[c].id, label: fbLabels[c].label, emoji: fbLabels[c].emoji, text: chunk });
+                        }
+                    }
+                    if (scenesData.length === 0) {
+                        scenesData = [{ id: 'full', label: 'Guión completo', emoji: '🎬', text: fullText }];
+                    }
+                    scenePhotos = new Array(scenesData.length).fill(null);
+                    renderSceneCards(scenesData);
+                    scenesGenerated = true;
+                    loading.style.display = 'none';
+                    list.style.display = '';
+                    totals.style.display = 'flex';
+                    updateSceneTotals();
+                } else {
+                    throw new Error('No scenes or script returned');
+                }
+            } catch (err) {
+                console.error('Script generation error:', err);
+                loading.style.display = 'none';
+                error.style.display = '';
+            }
+        }
+
+        function retryScriptGeneration() {
+            scenesGenerated = false;
+            generateScriptForWizard();
+        }
+
+        function skipVoiceover() {
+            // Uncheck voiceover toggle and skip to photos step
+            document.getElementById('voiceoverToggle').checked = false;
+            document.getElementById('voiceoverOptions').style.display = 'none';
+            updateActiveSteps();
+            showStep(6); // go to photos step
+        }
+
+        function renderSceneCards(scenes) {
+            const container = document.getElementById('scenesList');
+            container.innerHTML = '';
+            document.getElementById('sSceneCount').textContent = scenes.length;
+
+            scenes.forEach((scene, i) => {
+                const card = document.createElement('div');
+                card.className = 'scene-card';
+                card.dataset.sceneIndex = i;
+
+                card.innerHTML = `
+                    <div class="scene-card-header">
+                        <span class="scene-emoji">${scene.emoji || '📍'}</span>
+                        <span class="scene-label">${scene.label || 'Escena ' + (i+1)}</span>
+                        <span class="scene-number">Escena ${i + 1}</span>
+                    </div>
+                    <div class="scene-body">
+                        <div class="scene-text-col">
+                            <textarea class="scene-textarea" data-scene-idx="${i}" rows="3">${scene.text || ''}</textarea>
+                            <div class="scene-word-count"><span class="wc">0</span> palabras · ~<span class="dur">0</span>s</div>
+                        </div>
+                        <div class="scene-photo-col">
+                            <div class="scene-photo-upload" id="scenePhotoUpload_${i}" onclick="document.getElementById('sceneFileInput_${i}').click()">
+                                <div class="scene-photo-placeholder">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                    Subir foto
+                                </div>
+                                <button type="button" class="scene-photo-remove" onclick="event.stopPropagation();removeScenePhoto(${i})">✕</button>
+                            </div>
+                            <input type="file" id="sceneFileInput_${i}" accept="image/*" style="display:none" onchange="handleScenePhoto(${i}, this)">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+
+                // Wire up textarea events
+                const ta = card.querySelector('.scene-textarea');
+                ta.addEventListener('input', () => {
+                    updateSceneCardCount(card);
+                    updateSceneTotals();
+                    // Sync back to scenesData
+                    scenesData[i].text = ta.value;
+                });
+                updateSceneCardCount(card);
+            });
+        }
+
+        function handleScenePhoto(idx, input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            if (!file.type.startsWith('image/')) return;
+
+            scenePhotos[idx] = file;
+            const upload = document.getElementById('scenePhotoUpload_' + idx);
+            const url = URL.createObjectURL(file);
+            upload.innerHTML = `<img src="${url}" onload="URL.revokeObjectURL(this.src)"><button type="button" class="scene-photo-remove" onclick="event.stopPropagation();removeScenePhoto(${idx})">✕</button>`;
+            upload.classList.add('has-photo');
+            updateSceneTotals();
+        }
+
+        function removeScenePhoto(idx) {
+            scenePhotos[idx] = null;
+            const upload = document.getElementById('scenePhotoUpload_' + idx);
+            upload.innerHTML = `<div class="scene-photo-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Subir foto</div><button type="button" class="scene-photo-remove" onclick="event.stopPropagation();removeScenePhoto(${idx})">✕</button>`;
+            upload.classList.remove('has-photo');
+            // Reset file input
+            const input = document.getElementById('sceneFileInput_' + idx);
+            if (input) input.value = '';
+            updateSceneTotals();
+        }
+
+        function updateSceneCardCount(card) {
+            const ta = card.querySelector('.scene-textarea');
+            const text = ta.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            card.querySelector('.wc').textContent = words;
+            card.querySelector('.dur').textContent = Math.round(words / 2.5);
+        }
+
+        function updateSceneTotals() {
+            let totalWords = 0;
+            let photoCount = 0;
+            document.querySelectorAll('.scene-textarea').forEach(ta => {
+                const t = ta.value.trim();
+                if (t) totalWords += t.split(/\s+/).length;
+            });
+            scenePhotos.forEach(f => { if (f) photoCount++; });
+
+            const tw = document.getElementById('sTotalWords');
+            if (tw) tw.textContent = totalWords;
+            const td = document.getElementById('sTotalDuration');
+            if (td) td.textContent = Math.round(totalWords / 2.5);
+            const pc = document.getElementById('sPhotoCount');
+            if (pc) pc.textContent = photoCount;
+        }
+
+        // ============================================
+        // TRANSFER SCENE PHOTOS → PHOTO STEP
+        // ============================================
+        function transferScenePhotosToPhotoStep() {
+            // Only transfer if we have scene photos and no cover yet
+            const hasScenePhotos = scenePhotos.some(f => f !== null);
+            if (!hasScenePhotos) {
+                // Show hint that no photos were uploaded in scenes
+                const hint = document.getElementById('scenePhotosHint');
+                if (hint) hint.style.display = 'none';
+                return;
+            }
+
+            // First scene photo → portada (if no portada yet)
+            let sceneIdx = 0;
+            if (!coverFile && scenePhotos[0]) {
+                coverFile = scenePhotos[0];
+                coverRotation = 0;
+                showCoverPreview();
+                sceneIdx = 1;
+            }
+
+            // Remaining scene photos → extras (prepend, avoid duplicates)
+            const existingNames = new Set(extrasArray.map(item => item.file.name + item.file.size));
+            for (let i = sceneIdx; i < scenePhotos.length; i++) {
+                if (scenePhotos[i]) {
+                    const key = scenePhotos[i].name + scenePhotos[i].size;
+                    if (!existingNames.has(key)) {
+                        extrasArray.push({ file: scenePhotos[i], rotation: 0 });
+                        existingNames.add(key);
+                    }
+                }
+            }
+            renderExtras();
+            updatePhotoCountWarning();
+
+            // Show hint on photo step
+            const hint = document.getElementById('scenePhotosHint');
+            if (hint) hint.style.display = '';
+        }
+
+        // ============================================
+        // FORM SUBMIT
         // ============================================
         const form = document.getElementById('listingForm');
         const submitBtn = document.getElementById('submitBtn');
-        form.addEventListener('submit', function() {
+
+        // Loading overlay controller
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingStatus = document.getElementById('loadingStatus');
+        let loadingStepIndex = 0;
+        let loadingInterval = null;
+
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            loadingStepIndex = 0;
+            const steps = loadingOverlay.querySelectorAll('.loading-step');
+            steps.forEach(s => s.classList.remove('active', 'done'));
+            steps[0].classList.add('active');
+
+            const hasVO = isVoiceoverOn() && scenesData.length > 0;
+
+            if (hasVO) {
+                loadingStatus.textContent = 'Generando textos con IA...';
+                // Voiceover flow: longer timings (includes ElevenLabs audio generation)
+                const voTimings = [
+                    { delay: 3000, status: 'Creando PDF profesional...' },
+                    { delay: 6000, status: 'Diseñando publicaciones Instagram...' },
+                    { delay: 10000, status: 'Generando audio del voiceover...' },
+                    { delay: 25000, status: 'Preparando video con narración...' },
+                ];
+                voTimings.forEach((t, i) => {
+                    setTimeout(() => {
+                        if (loadingStepIndex <= i) {
+                            steps[i].classList.remove('active');
+                            steps[i].classList.add('done');
+                            if (steps[i + 1]) steps[i + 1].classList.add('active');
+                            loadingStatus.textContent = t.status;
+                            loadingStepIndex = i + 1;
+                        }
+                    }, t.delay);
+                });
+            } else {
+                loadingStatus.textContent = 'Generando textos con IA...';
+                const stepTimings = [
+                    { delay: 3000, status: 'Creando PDF profesional...' },
+                    { delay: 5500, status: 'Diseñando publicaciones Instagram...' },
+                    { delay: 8000, status: 'Generando email marketing...' },
+                    { delay: 11000, status: '¡Casi listo! Finalizando...' },
+                ];
+                stepTimings.forEach((t, i) => {
+                    setTimeout(() => {
+                        if (loadingStepIndex <= i) {
+                            steps[i].classList.remove('active');
+                            steps[i].classList.add('done');
+                            if (steps[i + 1]) steps[i + 1].classList.add('active');
+                            loadingStatus.textContent = t.status;
+                            loadingStepIndex = i + 1;
+                        }
+                    }, t.delay);
+                });
+            }
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Validate all active steps before submitting
+            for (const s of activeSteps) {
+                if (s === 5) continue; // scene step has no required fields
+                if (!validateStep(s)) {
+                    showStep(s);
+                    return;
+                }
+            }
+
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span> Generando listado...';
+            const hasVoiceover = isVoiceoverOn() && scenesData.length > 0;
+
+            submitBtn.innerHTML = hasVoiceover
+                ? '<span class="spinner"></span> Generando contenido y voiceover...'
+                : '<span class="spinner"></span> Procesando fotos...';
+
+            try {
+                const formData = new FormData(form);
+
+                // Remove original file inputs from formData (we'll add processed ones)
+                formData.delete('foto_portada');
+                formData.delete('fotos_extra');
+
+                // Process cover photo with rotation
+                if (coverFile) {
+                    const processedCover = await rotateImageFile(coverFile, coverRotation);
+                    formData.append('foto_portada', processedCover, processedCover.name);
+                }
+
+                // Process extras in order with rotations
+                for (const item of extrasArray) {
+                    const processedExtra = await rotateImageFile(item.file, item.rotation);
+                    formData.append('fotos_extra', processedExtra, processedExtra.name);
+                }
+
+                // Include scenes_data if voiceover flow
+                if (hasVoiceover) {
+                    // Update scenesData texts from current textareas
+                    document.querySelectorAll('.scene-textarea').forEach(ta => {
+                        const idx = parseInt(ta.dataset.sceneIdx);
+                        if (!isNaN(idx) && scenesData[idx]) {
+                            scenesData[idx].text = ta.value;
+                        }
+                    });
+                    formData.set('scenes_data', JSON.stringify(scenesData));
+                }
+
+                // Always show loading overlay
+                showLoading();
+
+                // Update loading steps text for voiceover
+                if (hasVoiceover) {
+                    const voStep = document.getElementById('step-email');
+                    if (voStep) {
+                        voStep.querySelector('.loading-step-icon').textContent = '🎙️';
+                        voStep.querySelector('.loading-step-text').textContent = 'Generando audio del voiceover';
+                    }
+                }
+
+                const response = await fetch('/generar', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.redirected) {
+                    const steps = loadingOverlay.querySelectorAll('.loading-step');
+                    steps.forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
+                    loadingStatus.textContent = '¡Listo! Redirigiendo a resultados...';
+                    setTimeout(() => { window.location.href = response.url; }, 600);
+                } else if (response.ok) {
+                    // Old voiceover flow fallback: server returns script_review.html
+                    const html = await response.text();
+                    document.open();
+                    document.write(html);
+                    document.close();
+                } else {
+                    throw new Error('Error del servidor');
+                }
+            } catch (err) {
+                hideLoading();
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Generar Listado Profesional`;
+                alert('Error al enviar el formulario. Inténtalo de nuevo.');
+                console.error('Submit error:', err);
+            }
         });
     </script>
 </body>

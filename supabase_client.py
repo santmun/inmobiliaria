@@ -93,8 +93,7 @@ def delete_storage_path(bucket: str, storage_paths: List[str]) -> None:
 
 def save_listing(job_id: str, property_data: dict, ai_copy: dict = None, photo_paths: List[str] = None) -> None:
     """Insert a new listing record."""
-    if not is_supabase_mode():
-        return
+    from datetime import datetime, timezone
     row = {
         "id": job_id,
         "property_data": property_data,
@@ -102,12 +101,18 @@ def save_listing(job_id: str, property_data: dict, ai_copy: dict = None, photo_p
         "photo_paths": photo_paths or [],
         "status": "processing",
         "video_status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
     }
+    # Always save locally so voiceover and results flows work in local mode
+    _save_listing_local(job_id, row)
+    if not is_supabase_mode():
+        return
     _get_client().table("listings").insert(row).execute()
 
 
 def update_listing_pdf(job_id: str, pdf_storage_path: str) -> None:
     """Update listing with PDF storage path."""
+    _update_listing_local(job_id, {"pdf_storage_path": pdf_storage_path})
     if not is_supabase_mode():
         return
     _get_client().table("listings").update({
@@ -115,10 +120,27 @@ def update_listing_pdf(job_id: str, pdf_storage_path: str) -> None:
     }).eq("id", job_id).execute()
 
 
-def update_listing_video(job_id: str, video_status: str, video_storage_path: str = None, video_error: str = None) -> None:
-    """Update listing video status and path."""
+def update_listing_assets(job_id: str, **kwargs) -> None:
+    """Update listing with optional asset storage paths.
+
+    Accepted kwargs:
+        instagram_storage_path, story_storage_path,
+        carousel_storage_paths (list), carousel_zip_path
+    """
+    allowed = {"instagram_storage_path", "story_storage_path",
+               "carousel_storage_paths", "carousel_zip_path",
+               "email_storage_path"}
+    data = {k: v for k, v in kwargs.items() if k in allowed and v}
+    if not data:
+        return
+    _update_listing_local(job_id, data)
     if not is_supabase_mode():
         return
+    _get_client().table("listings").update(data).eq("id", job_id).execute()
+
+
+def update_listing_video(job_id: str, video_status: str, video_storage_path: str = None, video_error: str = None) -> None:
+    """Update listing video status and path."""
     data = {"video_status": video_status}
     if video_storage_path:
         data["video_storage_path"] = video_storage_path
@@ -126,6 +148,9 @@ def update_listing_video(job_id: str, video_status: str, video_storage_path: str
         data["video_error"] = video_error
     if video_status == "ready":
         data["status"] = "ready"
+    _update_listing_local(job_id, data)
+    if not is_supabase_mode():
+        return
     _get_client().table("listings").update(data).eq("id", job_id).execute()
 
 
@@ -141,7 +166,7 @@ def get_video_status(job_id: str) -> Optional[dict]:
     row = resp.data
     result = {"status": row["video_status"]}
     if row.get("video_storage_path"):
-        result["url"] = get_public_url("listings", row["video_storage_path"])
+        result["filename"] = row["video_storage_path"]
     if row.get("video_error"):
         result["error"] = row["video_error"]
     return result
@@ -150,7 +175,7 @@ def get_video_status(job_id: str) -> Optional[dict]:
 def get_listing(job_id: str) -> Optional[dict]:
     """Get a listing by job_id."""
     if not is_supabase_mode():
-        return None
+        return _load_listing_local(job_id)
     resp = _get_client().table("listings").select("*").eq("id", job_id).maybe_single().execute()
     return resp.data
 
@@ -158,7 +183,7 @@ def get_listing(job_id: str) -> Optional[dict]:
 def list_listings(limit: int = 50) -> List[dict]:
     """List all listings ordered by creation date (newest first)."""
     if not is_supabase_mode():
-        return []
+        return _list_listings_local(limit)
     resp = _get_client().table("listings").select(
         "id, property_data, status, video_status, pdf_storage_path, video_storage_path, created_at"
     ).order("created_at", desc=True).limit(limit).execute()
@@ -211,6 +236,7 @@ def upload_branding_asset(filename: str, file_bytes: bytes) -> str:
 
 def ensure_branding_local(branding: dict) -> dict:
     """Download branding assets from Supabase to local cache for PDF generation.
+    Always re-downloads to ensure the latest version is used.
     Returns branding dict with local paths."""
     if not is_supabase_mode():
         return branding
@@ -222,8 +248,8 @@ def ensure_branding_local(branding: dict) -> dict:
     for key, filename in [("logo_path", "logo.png"), ("agent_photo_path", "agent_photo.png")]:
         if branding.get(key):
             local_file = cache_dir / filename
-            if not local_file.exists():
-                download_to_local("branding", filename, str(local_file))
+            # Always re-download to pick up updated branding assets
+            download_to_local("branding", filename, str(local_file))
             if local_file.exists():
                 result[key] = f"assets/{filename}"
 
@@ -233,6 +259,61 @@ def ensure_branding_local(branding: dict) -> dict:
 def delete_branding_assets() -> None:
     """Delete all branding assets from Supabase Storage."""
     delete_storage_path("branding", ["logo.png", "agent_photo.png"])
+
+
+# ---------------------------------------------------------------------------
+# Local JSON storage (fallback when Supabase is not configured)
+# ---------------------------------------------------------------------------
+
+def _listing_json_path(job_id: str) -> Path:
+    return GENERATED_DIR / job_id / "listing.json"
+
+
+def _save_listing_local(job_id: str, data: dict) -> None:
+    """Save listing data as JSON in the job directory."""
+    p = _listing_json_path(job_id)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(data, ensure_ascii=False, default=str), encoding="utf-8")
+
+
+def _load_listing_local(job_id: str) -> Optional[dict]:
+    """Load listing data from local JSON file."""
+    p = _listing_json_path(job_id)
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def _update_listing_local(job_id: str, updates: dict) -> None:
+    """Merge updates into the local listing JSON file."""
+    existing = _load_listing_local(job_id)
+    if existing is None:
+        return
+    existing.update(updates)
+    _save_listing_local(job_id, existing)
+
+
+def _list_listings_local(limit: int = 50) -> List[dict]:
+    """List all local listings by scanning generated directories."""
+    listings = []
+    if not GENERATED_DIR.exists():
+        return listings
+    for d in sorted(GENERATED_DIR.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
+        if not d.is_dir():
+            continue
+        listing_file = d / "listing.json"
+        if listing_file.exists():
+            try:
+                data = json.loads(listing_file.read_text(encoding="utf-8"))
+                listings.append(data)
+            except (json.JSONDecodeError, OSError):
+                continue
+        if len(listings) >= limit:
+            break
+    return listings
 
 
 # ---------------------------------------------------------------------------

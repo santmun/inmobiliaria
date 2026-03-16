@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ListaPro - Revisar Guión de Voiceover</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=17">
+    <style>
+        .sr-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2.5rem;
+        }
+        .sr-header { display:flex; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; }
+        .sr-icon {
+            width:56px; height:56px; border-radius:16px;
+            background:rgba(201,168,76,0.12);
+            display:flex; align-items:center; justify-content:center; flex-shrink:0;
+        }
+        .sr-title {
+            font-family:'Playfair Display',serif; font-size:1.6rem;
+            font-weight:700; color:#fff; margin:0 0 0.3rem;
+        }
+        .sr-subtitle { font-size:0.9rem; color:rgba(255,255,255,0.5); margin:0; }
+        .sr-badges { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+        .sr-badge {
+            display:inline-flex; align-items:center; gap:0.3rem;
+            padding:0.4rem 0.8rem; border-radius:50px;
+            background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2);
+            color:#c9a84c; font-size:0.78rem; font-weight:500;
+        }
+        /* Scene cards */
+        .scene-list { display:flex; flex-direction:column; gap:1rem; margin-bottom:1.5rem; }
+        .scene-card {
+            background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+            border-radius:14px; overflow:hidden; transition:border-color 0.3s;
+        }
+        .scene-card:focus-within { border-color:rgba(201,168,76,0.3); }
+        .scene-card-header {
+            display:flex; align-items:center; gap:0.75rem;
+            padding:0.75rem 1rem; background:rgba(255,255,255,0.02);
+            border-bottom:1px solid rgba(255,255,255,0.06);
+        }
+        .scene-emoji { font-size:1.4rem; }
+        .scene-label { font-weight:600; color:#fff; font-size:0.9rem; flex:1; }
+        .scene-number {
+            font-size:0.7rem; color:rgba(255,255,255,0.35);
+            font-weight:500; text-transform:uppercase; letter-spacing:1px;
+        }
+        .scene-body { display:flex; gap:1rem; padding:1rem; }
+        .scene-text-col { flex:1; min-width:0; }
+        .scene-textarea {
+            width:100%; padding:0.75rem; background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.08); border-radius:10px;
+            color:#fff; font-family:'DM Sans',sans-serif; font-size:0.9rem;
+            line-height:1.6; resize:vertical; outline:none;
+            transition:border-color 0.3s; min-height:70px;
+        }
+        .scene-textarea:focus { border-color:rgba(201,168,76,0.4); }
+        .scene-word-count {
+            text-align:right; font-size:0.75rem; color:rgba(255,255,255,0.3);
+            margin-top:0.3rem;
+        }
+        /* Photo selector */
+        .scene-photo-col {
+            flex:0 0 130px; display:flex; flex-direction:column;
+            align-items:center; gap:0.5rem;
+        }
+        .scene-photo-preview {
+            width:120px; height:90px; border-radius:10px; overflow:hidden;
+            background:rgba(255,255,255,0.05); border:2px dashed rgba(255,255,255,0.15);
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; transition:border-color 0.3s;
+            position:relative;
+        }
+        .scene-photo-preview:hover { border-color:rgba(201,168,76,0.4); }
+        .scene-photo-preview.has-photo { border-style:solid; border-color:rgba(201,168,76,0.3); }
+        .scene-photo-preview img {
+            width:100%; height:100%; object-fit:cover; display:block;
+        }
+        .scene-photo-placeholder {
+            color:rgba(255,255,255,0.25); font-size:0.7rem; text-align:center;
+            padding:0.3rem;
+        }
+        .scene-photo-placeholder svg { display:block; margin:0 auto 4px; }
+        .scene-photo-select {
+            width:120px; padding:0.3rem 0.4rem; background:rgba(255,255,255,0.06);
+            border:1px solid rgba(255,255,255,0.1); border-radius:8px;
+            color:#fff; font-size:0.75rem; font-family:'DM Sans',sans-serif;
+        }
+        .scene-photo-select option { background:#1a1a2e; color:#fff; }
+        /* Totals bar */
+        .sr-totals {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:0.75rem 1rem; background:rgba(255,255,255,0.03);
+            border:1px solid rgba(255,255,255,0.06); border-radius:10px;
+            margin-bottom:1.5rem; font-size:0.82rem; color:rgba(255,255,255,0.5);
+            flex-wrap:wrap; gap:0.5rem;
+        }
+        .sr-totals strong { color:#c9a84c; }
+        /* Fallback flat textarea */
+        .sr-flat-textarea {
+            width:100%; padding:1rem 1.2rem; background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.1); border-radius:14px;
+            color:#fff; font-family:'DM Sans',sans-serif; font-size:0.95rem;
+            line-height:1.7; resize:vertical; transition:border-color 0.3s; outline:none;
+        }
+        .sr-flat-textarea:focus { border-color:rgba(201,168,76,0.4); }
+        /* Submit */
+        .sr-submit-area { text-align:center; }
+        .sr-submit-btn {
+            display:inline-flex; align-items:center; gap:0.5rem;
+            padding:1rem 2.5rem;
+            background:linear-gradient(135deg,#c9a84c,#b8943f);
+            color:#fff; border:none; border-radius:50px;
+            font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:600;
+            cursor:pointer; transition:all 0.3s;
+            box-shadow:0 4px 20px rgba(201,168,76,0.3);
+        }
+        .sr-submit-btn:hover { transform:translateY(-2px); box-shadow:0 6px 28px rgba(201,168,76,0.4); }
+        .sr-submit-hint { margin-top:0.75rem; font-size:0.8rem; color:rgba(255,255,255,0.3); }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 600px) {
+            .scene-body { flex-direction: column; }
+            .scene-photo-col { flex: 0 0 auto; flex-direction: row; gap: 0.75rem; }
+            .scene-photo-preview { width: 80px; height: 60px; }
+            .scene-photo-select { width: auto; flex: 1; }
+        }
+    </style>
+</head>
+<body class="wizard-immersive">
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-logo">
+                <h1>Lista<span>Pro</span></h1>
+            </div>
+            <nav class="header-nav">
+                <a href="/plantilla" class="header-nav-link">Plantilla</a>
+                <a href="/historial" class="header-nav-link">Historial</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 100px;">
+        <div class="sr-card">
+            <div class="sr-header">
+                <div class="sr-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </div>
+                <div>
+                    <h2 class="sr-title">
+                        {% if scenes %}Revisa tu Guión por Escenas{% else %}Revisa tu Guión de Voiceover{% endif %}
+                    </h2>
+                    <p class="sr-subtitle">
+                        {% if scenes %}
+                        Edita el texto de cada escena y asigna la foto correcta. Esto sincronizará el audio con las imágenes en el video.
+                        {% else %}
+                        Edita el texto si lo necesitas. Este guión se convertirá en audio para tu video.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="sr-badges">
+                <span class="sr-badge">
+                    {% if video_type == "tour" %}🏠 Tour Narrado{% else %}⚡ Reel Rápido{% endif %}
+                </span>
+                <span class="sr-badge">
+                    {% if vo_voice == "masculina" %}👨 Voz Masculina{% else %}👩 Voz Femenina{% endif %}
+                </span>
+                <span class="sr-badge">
+                    {% if vo_tone == "lujo" %}✨ Lujo{% elif vo_tone == "energetico" %}🔥 Energético{% else %}💼 Profesional{% endif %}
+                </span>
+                {% if scenes %}
+                <span class="sr-badge">🎬 {{ scenes|length }} escenas</span>
+                {% endif %}
+            </div>
+
+            <form id="scriptForm" action="/generar-con-voiceover" method="POST">
+                <input type="hidden" name="job_id" value="{{ job_id }}">
+                <input type="hidden" name="vo_voice" value="{{ vo_voice }}">
+                <input type="hidden" name="video_type" value="{{ video_type }}">
+                <input type="hidden" name="scenes_data" id="scenesDataInput" value="">
+
+                {% if scenes %}
+                <!-- SCENE-BASED VIEW -->
+                <div class="scene-list" id="sceneList">
+                    {% for scene in scenes %}
+                    <div class="scene-card" data-scene-index="{{ loop.index0 }}">
+                        <div class="scene-card-header">
+                            <span class="scene-emoji">{{ scene.emoji }}</span>
+                            <span class="scene-label">{{ scene.label }}</span>
+                            <span class="scene-number">Escena {{ loop.index }}</span>
+                        </div>
+                        <div class="scene-body">
+                            <div class="scene-text-col">
+                                <textarea class="scene-textarea" data-scene-id="{{ scene.id }}" rows="3">{{ scene.text }}</textarea>
+                                <div class="scene-word-count"><span class="wc">0</span> palabras · ~<span class="dur">0</span>s</div>
+                            </div>
+                            <div class="scene-photo-col">
+                                <div class="scene-photo-preview" id="photoPreview_{{ loop.index0 }}" data-index="{{ loop.index0 }}">
+                                    <div class="scene-photo-placeholder">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                        Asignar foto
+                                    </div>
+                                </div>
+                                <select class="scene-photo-select" data-index="{{ loop.index0 }}" onchange="assignPhoto(this)">
+                                    <option value="">— Sin foto —</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="sr-totals" id="srTotals">
+                    <span><strong id="totalWords">0</strong> palabras total</span>
+                    <span>Duración estimada: <strong>~<span id="totalDuration">0</span>s</strong></span>
+                    <span>Fotos asignadas: <strong><span id="assignedCount">0</span>/{{ scenes|length }}</strong></span>
+                </div>
+
+                {% else %}
+                <!-- FLAT SCRIPT VIEW (fallback) -->
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block;font-size:0.8rem;font-weight:500;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.6rem;">Guión del voiceover</label>
+                    <textarea name="vo_script" id="flatScriptText" class="sr-flat-textarea" rows="10">{{ script }}</textarea>
+                    <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:0.5rem;font-size:0.8rem;color:rgba(255,255,255,0.35);">
+                        <span><span id="flatWordCount">0</span> palabras</span>
+                        <span>~<span id="flatDuration">0</span> seg</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="sr-submit-area">
+                    <button type="submit" id="confirmBtn" class="sr-submit-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                        Confirmar y Generar
+                    </button>
+                    <p class="sr-submit-hint">Se generará el audio del voiceover y luego el video completo</p>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+        <div class="loading-content">
+            <div class="loading-logo">Lista<span>Pro</span></div>
+            <div class="loading-animation">
+                <div class="loading-house">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="#c9a84c"/>
+                        <polyline points="9 22 9 12 15 12 15 22" stroke="#c9a84c"/>
+                    </svg>
+                </div>
+                <div class="loading-pulse-ring"></div>
+            </div>
+            <div class="loading-status" id="loadingStatus">Generando audio con ElevenLabs...</div>
+            <div class="loading-steps">
+                <div class="loading-step active" id="step-audio" data-step="1">
+                    <div class="loading-step-icon">🎙️</div>
+                    <div class="loading-step-text">Generando audio del voiceover</div>
+                    <div class="loading-step-check">✓</div>
+                </div>
+                <div class="loading-step" id="step-music" data-step="2">
+                    <div class="loading-step-icon">🎵</div>
+                    <div class="loading-step-text">Creando música de fondo con IA</div>
+                    <div class="loading-step-check">✓</div>
+                </div>
+                <div class="loading-step" id="step-render" data-step="3">
+                    <div class="loading-step-icon">🎬</div>
+                    <div class="loading-step-text">Preparando video</div>
+                    <div class="loading-step-check">✓</div>
+                </div>
+                <div class="loading-step" id="step-done" data-step="4">
+                    <div class="loading-step-icon">🚀</div>
+                    <div class="loading-step-text">¡Listo! Redirigiendo a resultados...</div>
+                    <div class="loading-step-check">✓</div>
+                </div>
+            </div>
+            <p class="loading-hint">Tu contenido ya está listo — preparando el video en segundo plano</p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <span>ListaPro</span> — Automatización inteligente para inmobiliarias
+    </footer>
+
+    <script>
+        // IIFE to avoid variable name collisions with form.html
+        // (this page is loaded via document.write() inside form.html's context)
+        (function() {
+            // ── Photo data from server ──
+            var photos = {{ review_photos_json | default('[]') | safe }};
+            var scenesInitial = {{ scenes_json | default('[]') | safe }};
+            var isSceneMode = scenesInitial.length > 0;
+
+            // ── Populate photo selectors ──
+            if (isSceneMode) {
+                var selects = document.querySelectorAll('.scene-photo-select');
+                selects.forEach(function(sel) {
+                    photos.forEach(function(p) {
+                        var opt = document.createElement('option');
+                        opt.value = p.filename;
+                        opt.textContent = p.label;
+                        sel.appendChild(opt);
+                    });
+                });
+
+                // Auto-assign: first photo (portada) to first scene,
+                // then extras in order to subsequent scenes (skip last scene = cierre)
+                var photoIndex = 0;
+                selects.forEach(function(sel, i) {
+                    if (photoIndex < photos.length && i < selects.length - 1) {
+                        sel.value = photos[photoIndex].filename;
+                        photoIndex++;
+                        assignPhoto(sel);
+                    }
+                });
+            }
+
+            // ── Assign photo to scene ──
+            window.assignPhoto = function(selectEl) {
+                var idx = selectEl.getAttribute('data-index');
+                var preview = document.getElementById('photoPreview_' + idx);
+                var filename = selectEl.value;
+
+                if (filename) {
+                    var photo = photos.find(function(p) { return p.filename === filename; });
+                    if (photo) {
+                        preview.innerHTML = '<img src="' + photo.url + '" alt="' + photo.label + '">';
+                        preview.classList.add('has-photo');
+                    }
+                } else {
+                    preview.innerHTML = '<div class="scene-photo-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Asignar foto</div>';
+                    preview.classList.remove('has-photo');
+                }
+
+                updateTotals();
+            };
+
+            // ── Word count & duration helpers ──
+            function countWords(text) {
+                var t = text.trim();
+                return t ? t.split(/\s+/).length : 0;
+            }
+
+            function updateSceneCounts() {
+                document.querySelectorAll('.scene-textarea').forEach(function(ta) {
+                    var card = ta.closest('.scene-card');
+                    var words = countWords(ta.value);
+                    card.querySelector('.wc').textContent = words;
+                    card.querySelector('.dur').textContent = Math.round(words / 2.5);
+                });
+            }
+
+            function updateTotals() {
+                var totalWords = 0;
+                var assigned = 0;
+                document.querySelectorAll('.scene-textarea').forEach(function(ta) {
+                    totalWords += countWords(ta.value);
+                });
+                document.querySelectorAll('.scene-photo-select').forEach(function(sel) {
+                    if (sel.value) assigned++;
+                });
+                var el = document.getElementById('totalWords');
+                if (el) el.textContent = totalWords;
+                var dur = document.getElementById('totalDuration');
+                if (dur) dur.textContent = Math.round(totalWords / 2.5);
+                var ac = document.getElementById('assignedCount');
+                if (ac) ac.textContent = assigned;
+            }
+
+            // ── Scene textarea events ──
+            document.querySelectorAll('.scene-textarea').forEach(function(ta) {
+                ta.addEventListener('input', function() {
+                    updateSceneCounts();
+                    updateTotals();
+                });
+            });
+
+            // Initial counts
+            if (isSceneMode) {
+                updateSceneCounts();
+                updateTotals();
+            }
+
+            // ── Flat script counts (fallback) ──
+            var flatTA = document.getElementById('flatScriptText');
+            if (flatTA) {
+                function updateFlatCounts() {
+                    var words = countWords(flatTA.value);
+                    document.getElementById('flatWordCount').textContent = words;
+                    document.getElementById('flatDuration').textContent = Math.round(words / 2.5);
+                }
+                flatTA.addEventListener('input', updateFlatCounts);
+                updateFlatCounts();
+            }
+
+            // ── Loading overlay ──
+            var srLoadingOverlay = document.getElementById('loadingOverlay');
+            var srLoadingStatus = document.getElementById('loadingStatus');
+
+            function showSrLoading() {
+                srLoadingOverlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+
+                var steps = srLoadingOverlay.querySelectorAll('.loading-step');
+                steps.forEach(function(s) { s.classList.remove('active', 'done'); });
+                steps[0].classList.add('active');
+                srLoadingStatus.textContent = 'Generando audio con ElevenLabs...';
+
+                var stepTimings = [
+                    { delay: 3000, status: 'Creando música de fondo con IA...' },
+                    { delay: 6000, status: 'Preparando video...' },
+                    { delay: 9000, status: '¡Casi listo! Finalizando...' },
+                ];
+
+                stepTimings.forEach(function(t, i) {
+                    setTimeout(function() {
+                        steps[i].classList.remove('active');
+                        steps[i].classList.add('done');
+                        if (steps[i + 1]) {
+                            steps[i + 1].classList.add('active');
+                        }
+                        srLoadingStatus.textContent = t.status;
+                    }, t.delay);
+                });
+            }
+
+            // ── Form submit ──
+            var confirmBtn = document.getElementById('confirmBtn');
+
+            document.getElementById('scriptForm').addEventListener('submit', function() {
+                // Build scenes_data JSON from current state
+                if (isSceneMode) {
+                    var scenesOut = [];
+                    document.querySelectorAll('.scene-card').forEach(function(card) {
+                        var ta = card.querySelector('.scene-textarea');
+                        var sel = card.querySelector('.scene-photo-select');
+                        scenesOut.push({
+                            id: ta.getAttribute('data-scene-id'),
+                            label: card.querySelector('.scene-label').textContent,
+                            emoji: card.querySelector('.scene-emoji').textContent,
+                            text: ta.value,
+                            photo: sel ? sel.value : '',
+                        });
+                    });
+                    document.getElementById('scenesDataInput').value = JSON.stringify(scenesOut);
+                }
+
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<span style="display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;"></span> Preparando...';
+                showSrLoading();
+                // Do NOT call e.preventDefault() — let the form submit naturally
+            });
+        })();
+    </script>
+</body>
+</html>

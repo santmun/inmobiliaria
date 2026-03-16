@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=6">
+    <link rel="stylesheet" href="/static/style.css?v=17">
 </head>
 <body>
     <header class="header">
@@ -171,9 +171,44 @@
             <div class="template-section">
                 <h3 class="template-section-title">
                     <span class="template-section-icon">🎬</span>
-                    Colores del Video
+                    Estilo del Video
                 </h3>
                 <div class="template-section-body">
+                    <!-- Video Style Selector -->
+                    <label class="variant-label">Estilo visual</label>
+                    <input type="hidden" name="video_style" id="video_style" value="{{ settings.video.video_style }}">
+                    <div class="variant-selector">
+                        <div class="variant-option {% if settings.video.video_style == 'elegante' %}selected{% endif %}" data-value="elegante" onclick="selectVideoStyle(this, 'elegante')">
+                            <div class="variant-thumb" style="background: linear-gradient(135deg, #0f2137 0%, #1a365d 100%); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;">
+                                <div style="width:60%; height:3px; background:#c9a84c; border-radius:2px;"></div>
+                                <div style="color:#c9a84c; font-size:10px; font-family:serif; letter-spacing:2px;">VENTA</div>
+                                <div style="width:40%; height:2px; background:rgba(201,168,76,0.4); border-radius:2px;"></div>
+                            </div>
+                            <span class="variant-name">Elegante</span>
+                            <span class="variant-desc">Navy + dorado, serif</span>
+                        </div>
+                        <div class="variant-option {% if settings.video.video_style == 'moderno' %}selected{% endif %}" data-value="moderno" onclick="selectVideoStyle(this, 'moderno')">
+                            <div class="variant-thumb" style="background: linear-gradient(135deg, #111111 0%, #1e1e1e 100%); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;">
+                                <div style="width:60%; height:3px; background:#00d4ff; border-radius:2px;"></div>
+                                <div style="color:#00d4ff; font-size:10px; font-family:sans-serif; letter-spacing:2px;">VENTA</div>
+                                <div style="width:40%; height:2px; background:rgba(0,212,255,0.4); border-radius:2px;"></div>
+                            </div>
+                            <span class="variant-name">Moderno</span>
+                            <span class="variant-desc">Negro + cyan, rápido</span>
+                        </div>
+                        <div class="variant-option {% if settings.video.video_style == 'minimalista' %}selected{% endif %}" data-value="minimalista" onclick="selectVideoStyle(this, 'minimalista')">
+                            <div class="variant-thumb" style="background: linear-gradient(135deg, #faf8f5 0%, #f0ece6 100%); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;">
+                                <div style="width:60%; height:3px; background:#2c2420; border-radius:2px;"></div>
+                                <div style="color:#2c2420; font-size:10px; font-family:serif; letter-spacing:2px;">VENTA</div>
+                                <div style="width:40%; height:2px; background:rgba(44,36,32,0.3); border-radius:2px;"></div>
+                            </div>
+                            <span class="variant-name">Minimalista</span>
+                            <span class="variant-desc">Claro + tierra, suave</span>
+                        </div>
+                    </div>
+
+                    <label class="variant-label" style="margin-top: 1.5rem;">Colores personalizados (opcional)</label>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">Si defines colores, se usarán en lugar de los del estilo.</p>
                     <div class="color-pickers-row">
                         <div class="color-picker-group">
                             <label for="video_color_background">Fondo</label>
@@ -305,6 +340,12 @@
                 }
             });
         });
+
+        function selectVideoStyle(el, value) {
+            el.parentNode.querySelectorAll('.variant-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('video_style').value = value;
+        }
 
         function selectVariant(el, value) {
             document.querySelectorAll('.variant-option').forEach(o => o.classList.remove('selected'));

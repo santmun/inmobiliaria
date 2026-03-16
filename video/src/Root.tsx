@@ -1,12 +1,12 @@
 import React from "react";
 import { Composition } from "remotion";
+import { getAudioDurationInSeconds } from "@remotion/media-utils";
 import { ListingReel } from "./ListingReel";
 import { ListingProps } from "./lib/types";
 import { FPS, WIDTH, HEIGHT } from "./lib/constants";
 
-// Total duration: sum of scene durations - (4 transitions * 15 frames)
-// 70 + 190 + 130 + 190 + 80 - (4 * 15) = 660 - 60 = 600 frames = 20s
-const TOTAL_DURATION = 600;
+// Base duration: 600 frames = 20s (for reel without voiceover)
+const BASE_DURATION = 600;
 
 const defaultProps: ListingProps = {
   tipoPropiedad: "Casa",
@@ -26,6 +26,7 @@ const defaultProps: ListingProps = {
   agenteNombre: "María García",
   agenteTelefono: "+52 55 1234 5678",
   agenciaNombre: "Inmobiliaria Premium",
+  videoStyle: "elegante",
 };
 
 export const RemotionRoot: React.FC = () => {
@@ -33,11 +34,29 @@ export const RemotionRoot: React.FC = () => {
     <Composition
       id="ListingReel"
       component={ListingReel}
-      durationInFrames={TOTAL_DURATION}
+      durationInFrames={BASE_DURATION}
       fps={FPS}
       width={WIDTH}
       height={HEIGHT}
       defaultProps={defaultProps}
+      calculateMetadata={async ({ props }) => {
+        // If voiceover audio exists, calculate duration from the audio length
+        if (props.voiceoverUrl) {
+          try {
+            const audioDuration = await getAudioDurationInSeconds(props.voiceoverUrl);
+            // Add 3 seconds padding (intro + outro)
+            const totalSeconds = audioDuration + 3;
+            const frames = Math.ceil(totalSeconds * FPS);
+            return {
+              durationInFrames: Math.max(frames, BASE_DURATION),
+            };
+          } catch (e) {
+            console.error("Could not get voiceover duration:", e);
+          }
+        }
+        // Default: 20s reel
+        return { durationInFrames: BASE_DURATION };
+      }}
     />
   );
 };

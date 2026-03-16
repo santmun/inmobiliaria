@@ -30,5 +30,16 @@ Thumbs.db
 # Supabase local
 supabase/.temp/
 
+# Branding assets (user-specific logos/photos)
+video/public/branding/*.png
+video/public/branding/*.jpg
+video/public/generated
+
+# Personal scripts with hardcoded paths
+run_server.sh
+
+# API docs (not part of the project)
+uploadpostdocs.txt
+
 # Claude
 CLAUDE.md

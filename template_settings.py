@@ -18,6 +18,7 @@ DEFAULT_SETTINGS = {
         "color_background": "#0f2137",
         "color_accent": "#c9a84c",
         "color_cta": "#c8102e",
+        "video_style": "elegante",
     },
     "music": {
         "style": "elegant ambient piano cinematic soft luxury real estate",
@@ -79,6 +80,7 @@ def save_settings(data: dict) -> None:
             "color_background": data.get("video_color_background", DEFAULT_SETTINGS["video"]["color_background"]),
             "color_accent": data.get("video_color_accent", DEFAULT_SETTINGS["video"]["color_accent"]),
             "color_cta": data.get("video_color_cta", DEFAULT_SETTINGS["video"]["color_cta"]),
+            "video_style": data.get("video_style", DEFAULT_SETTINGS["video"]["video_style"]),
         },
         "music": {
             "style": data.get("music_style", DEFAULT_SETTINGS["music"]["style"]),
