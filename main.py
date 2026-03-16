@@ -452,11 +452,11 @@ async def generar_listado(
             "error": f"Error al generar PDF: {str(e)}",
         })
 
-    # Upload PDF to Supabase Storage
+    # Save PDF path (always, so local mode results page works)
     pdf_storage_path = f"{job_id}/{pdf_filename}"
+    sb.update_listing_pdf(job_id, pdf_storage_path)
     if sb.is_supabase_mode():
         sb.upload_file_from_path("listings", pdf_storage_path, str(pdf_path))
-        sb.update_listing_pdf(job_id, pdf_storage_path)
 
     # Generate Instagram Post Image (1080x1350)
     instagram_filename = f"instagram_{job_id}.png"
